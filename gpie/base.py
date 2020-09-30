@@ -254,7 +254,7 @@ class BayesianSupervisedModel(SupervisedModel):
         check_X_update(self.X, X)
 
 
-class OnlineModelMixin:
+class OnlineSupervisedMixin(SupervisedModel):
 
     @abstractmethod
     def update(self, X: ndarray, y: ndarray):

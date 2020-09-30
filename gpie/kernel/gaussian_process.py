@@ -165,8 +165,6 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
     def fit(self, X: ndarray, y: ndarray, verbose: bool = False):
         """ MAP estimatem under uniform prior """
         super().fit(X, y)
-        # FIXME: check if analytical optimum exists, e.g. LinearKernel
-        #        if so directly obtain the parameters
         self.optimizer.fun = self._obj(self.X, self.y)
         self.optimizer.jac = True
         success, loss, kparams = self.optimizer.minimize(verbose)
@@ -182,22 +180,22 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         self.dual_weights = cho_solve((self.L, True), self.y)
         return self
 
-    def update(self, X: ndarray, y: ndarray):
-        super().update(X, y)
-        self.optimizer.fun = self._obj(self.X, self.y)
-        self.optimizer.jac = True
-        success, loss, kparams = self.optimizer.minimize()
-        if not success:
-            warnings.warn( 'optimzation fails. '
-                           'changing x0/bounds or increase n_restarts.' )
-        self._set(kparams)
-        self.log_mll = -loss
-        # precompute for prediction
-        K = self.kernel(self.X, self.X)
-        K[np.diag_indices_from(K)] += 1e-8  # jitter
-        self.L = cholesky(K, lower=True)
-        self.dual_weights = cho_solve((self.L, True), self.y)
-        return self
+    # def update(self, X: ndarray, y: ndarray):
+    #     super().update(X, y)
+    #     self.optimizer.fun = self._obj(self.X, self.y)
+    #     self.optimizer.jac = True
+    #     success, loss, kparams = self.optimizer.minimize()
+    #     if not success:
+    #         warnings.warn( 'optimzation fails. '
+    #                        'changing x0/bounds or increase n_restarts.' )
+    #     self._set(kparams)
+    #     self.log_mll = -loss
+    #     # precompute for prediction
+    #     K = self.kernel(self.X, self.X)
+    #     K[np.diag_indices_from(K)] += 1e-8  # jitter
+    #     self.L = cholesky(K, lower=True)
+    #     self.dual_weights = cho_solve((self.L, True), self.y)
+    #     return self
 
     def predict(self, X: ndarray):
         super().predict(X)
@@ -216,11 +214,6 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
                           'possibly numerical issues. correcting to 0.')
         cov[cov < 0.] = 0.
         return mu, cov
-
-
-# class GaussianProcessClassifier(SupervisedModel):
-#     def __init__(self):
-#        raise NotImplementedError
 
 
 class tProcessRegressor(BayesianSupervisedModel):
@@ -257,9 +250,4 @@ class tProcessRegressor(BayesianSupervisedModel):
 
     def posterior(self):
         pass
-
-
-# class tProcessClassifier(SupervisedModel):
-# 	def __init__(self):
-#        raise NotImplementedError
 
