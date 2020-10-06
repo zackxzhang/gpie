@@ -14,9 +14,11 @@ from .util import check_X_update, check_X_y, check_X_y_update, OPT_API, \
 class Bounds:
     """
     Thetas' component
-    bounds must be finite
+    empty bounds indicate no learnable parameters
+    bound values must be finite
     """
-    def __init__(self, lowers: ndarray, uppers: ndarray):
+    def __init__(self, lowers: ndarray = np.array([]),
+                       uppers: ndarray = np.array([])):
         if not is_array(lowers, 1, np.number):
             raise TypeError('lower bounds must be 1d numeric array.')
         if not is_array(uppers, 1, np.number):
@@ -43,6 +45,12 @@ class Bounds:
         return Bounds( np.concatenate([self.lowers, other.lowers]),
                        np.concatenate([self.uppers, other.uppers]) )
 
+    def __radd__(self, other):
+        if not isinstance(other, Bounds):
+            raise TypeError('Bounds can only be added to other Bounds.')
+        return Bounds( np.concatenate([other.lowers, self.lowers]),
+                       np.concatenate([other.uppers, self.uppers]) )
+
     @property
     def lowers(self):
         return self._lowers
@@ -51,13 +59,12 @@ class Bounds:
     def uppers(self):
         return self._uppers
 
-    def contains(self, values: ndarray, tol: float = 1e-6) -> bool:
+    def contains(self, values: ndarray) -> bool:
         if values.shape != self.lowers.shape:
             raise ValueError('dimension of values must agree with bounds.')
-        return np.all(self.lowers - tol <= values) and \
-               np.all(values <= self.uppers + tol)
+        return np.all(self.lowers <= values) and np.all(values <= self.uppers)
 
-    def clamped(self) -> bool:
+    def clamped(self) -> bool:  # FIXME: use fixed or not to replace it
         if np.allclose(self.lowers, self.uppers):
             return True
         else:
@@ -70,18 +77,19 @@ class Bounds:
             raise ValueError('inteface must be one of {}'.format(OPT_API))
 
     @classmethod
-    def from_seq(cls, bounds: Sequence[B],
-                    transform: Callable = lambda x: x):
+    def from_seq(cls, bounds: Sequence[B], transform: Callable = lambda x: x):
         return Bounds(*map_array(transform, concat_bounds(*bounds)))
 
 
 class Thetas:
     """
     parameterization of models
-    values can be nan or infinite to indicate uninitialized status
+    empty thetas indicate no learnable parameters
+    infinite theta values indicate uninitialized status
     """
 
-    def __init__(self, values: ndarray, bounds: Bounds):
+    def __init__(self, values: ndarray = np.array([]),
+                 bounds: Bounds = Bounds()):
         if not isinstance(bounds, Bounds):
             raise TypeError('bounds must be Bounds object.')
         self._bounds = bounds
@@ -102,9 +110,15 @@ class Thetas:
         return Thetas( np.concatenate([self.values, other.values]),
                        self.bounds + other.bounds                   )
 
+    def __radd__(self, other):
+        if not isinstance(other, Thetas):
+            raise TypeError('Thetas can only be added to another Thetas.')
+        return Thetas( np.concatenate([other.values, self.values]),
+                       other.bounds + self.bounds                   )
+
     @classmethod
     def from_seq(cls, values: Sequence[V], bounds: Sequence[B],
-                 transform: Callable):
+                 transform: Callable = lambda x: x):
         return Thetas(values=map_array(transform, concat_values(*values)),
                       bounds=Bounds.from_seq(bounds, transform=transform))
 
@@ -116,12 +130,6 @@ class Thetas:
     def bounds(self):
         return self._bounds
 
-    def assigned(self) -> bool:
-        return np.all(np.isfinite(self.values))
-
-    def get(self):
-        return self.values, self.bounds
-
     def set(self, values: ndarray):
         if not is_array(values, 1, np.number):
             raise TypeError('values must be 1d numeric array.')
@@ -130,15 +138,18 @@ class Thetas:
                               'each value must obey its lowers/upper bounds.'  )
         self._values = values
 
+    def assigned(self) -> bool:
+        return np.all(np.isfinite(self.values))
+
 
 class Hypers:
-    """ a view of learnable parameters and fixed parameters """
+    """ a view of learnable and fixed parameters """
 
     def __init__(self, names: ndarray, values: ndarray):
         if isinstance(names, (tuple, list)):
             names = np.array(names)
         if not is_array(names, 1, np.str_):
-            raise TypeError('names must be 1d unicode array.')
+            raise TypeError('names must be 1d unicode string array.')
         if not is_array(values, 1, np.number):
             raise TypeError('values must be 1d numeric array.')
         if not len(names) == len(values):
@@ -154,6 +165,20 @@ class Hypers:
                for name, value in zip(self.names.flat, self.values.flat)]
         return ', '.join(out)
 
+    def __add__(self, other):
+        if not isinstance(other, Hypers):
+            raise TypeError('Hypers can only be added to other Hypers.')
+        names  = np.concatenate([self.names, other.names])
+        values = np.concatenate([self.values, other.values])
+        return Hypers(names, values)
+
+    def __radd__(self, other):
+        if not isinstance(other, Hypers):
+            raise TypeError('Hypers can only be added to other Hypers.')
+        names  = np.concatenate([other.names, self.names])
+        values = np.concatenate([other.values, self.values])
+        return Hypers(names, values)
+
     @property
     def names(self):
         return self._names
@@ -161,13 +186,6 @@ class Hypers:
     @property
     def values(self):
         return self._values
-
-    def __add__(self, other):
-        if not isinstance(other, Hypers):
-            raise TypeError('Hypers can only be added to other Hypers.')
-        names = np.concatenate([self.names, other.names])
-        values = np.concatenate([self.values, other.values])
-        return Hypers(names, values)
 
 
 class Model(ABC):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # context managers
 
-import colorama                                                   # type: ignore
+# import colorama                                                 # type: ignore
 import numpy as np                                                # type: ignore
 import os
 import signal
@@ -45,8 +45,8 @@ class Timer:
     def __exit__(self, *args):
         print(self.prompt + str(datetime.now() - self.start))
         # print(colorama.Fore.BLUE + \
-        #       self.prompt + str(datetime.now() - self.start)\
-        #       + colorama.Style.RESET_ALL)
+        #       self.prompt + str(datetime.now() - self.start) + \
+        #       colorama.Style.RESET_ALL)
 
 
 class TimeOut:

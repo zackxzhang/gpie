@@ -21,7 +21,7 @@ def is_array(x: Any, ndim=1, dtype=np.number) -> bool:
 
 def map_array(f: Callable, x: Union[ndarray, Sequence[ndarray]]) \
     -> Union[ndarray, Sequence[ndarray]]:
-    return np.vectorize(f)(x)
+    return np.vectorize(f, otypes=[float])(x)
 
 
 V = Union[float, ndarray]

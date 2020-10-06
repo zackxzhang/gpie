@@ -26,7 +26,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
     solvers = {'l-bfgs-b'}
     aquisitions = {'pi', 'ei', 'lcb'}
 
-    def __init__(self, kernel: Kernel = RBFKernel(1., 1.) + WhiteKernel(1.),
+    def __init__(self, kernel: Kernel = 1. * RBFKernel(1.) + 1. * WhiteKernel(),
                  inference: str = 'exact', solver: str = 'l-bfgs-b'):
 
         super().__init__()
@@ -179,23 +179,6 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         self.L = cholesky(K, lower=True)
         self.dual_weights = cho_solve((self.L, True), self.y)
         return self
-
-    # def update(self, X: ndarray, y: ndarray):
-    #     super().update(X, y)
-    #     self.optimizer.fun = self._obj(self.X, self.y)
-    #     self.optimizer.jac = True
-    #     success, loss, kparams = self.optimizer.minimize()
-    #     if not success:
-    #         warnings.warn( 'optimzation fails. '
-    #                        'changing x0/bounds or increase n_restarts.' )
-    #     self._set(kparams)
-    #     self.log_mll = -loss
-    #     # precompute for prediction
-    #     K = self.kernel(self.X, self.X)
-    #     K[np.diag_indices_from(K)] += 1e-8  # jitter
-    #     self.L = cholesky(K, lower=True)
-    #     self.dual_weights = cho_solve((self.L, True), self.y)
-    #     return self
 
     def predict(self, X: ndarray):
         super().predict(X)
