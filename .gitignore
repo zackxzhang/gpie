@@ -133,5 +133,10 @@ dmypy.json
 *.sublime-workspace
 *.sublime-project
 
-# Mac
+# Mac stuff
 .DS_Store
+
+# under construction
+examples/
+pyproject.toml
+setup.cfg
