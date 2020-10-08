@@ -29,19 +29,28 @@ class KernelTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.X = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
         cls.Z = np.array([[1, 0, 0], [1, 1, 0], [1, 1, 1]], dtype=float)
-        cls.y = np.array([0.9, 0.5, 0.2])
-        # cls.U = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
-        # cls.V = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
-        # cls.w = np.array([0.9, 0.5, 0.2])  # FIXME add randomized test points
+        cls.y = np.array([0.7, 0.5, 0.2])
+        cls.U = np.random.uniform(size=(5, 3))
+        cls.W = np.random.uniform(size=(7, 3))
+        cls.v = np.random.uniform(size=(5,))
 
     def _check_grad(self, fun, jac, x):
         ag = jac(x)
         ng = approx_fprime(x, fun, 1e-8)
-        err = np.abs(ag - ng).max()
-        if not err < 1e-4:
+        err = np.amax(np.abs(ag - ng) / (np.abs(ag + ng) + 1e-2))
+        if not err < 5e-3:
             print('\nanalytical gradient {}'.format(ag))
             print('numerical  gradient {}\n'.format(ng))
-            self.assertTrue(err < 1e-4)
+            self.assertTrue(err < 5e-3)
+
+    def _gpr_grad(self, kernel):
+        gpr = GaussianProcessRegressor(kernel=kernel)
+        f = gpr._obj(self.U, self.v)
+        fun = lambda x: f(x)[0]
+        jac = lambda x: f(x)[1]
+        for p in (gpr.thetas.values, np.ones((len(gpr.thetas),)),
+                  np.random.uniform(0., 1., (len(gpr.thetas),))):
+            self._check_grad(fun, jac, p)
 
     def test_constant(self):
         const = ConstantKernel(1.)
@@ -49,15 +58,8 @@ class KernelTestCase(unittest.TestCase):
         res = np.ones((3, 3))
         self.assertTrue(np.allclose(const(self.X, self.X), res))
         self.assertTrue(np.allclose(const(self.X, self.Z), res))
-        # jacobian
-        # constant kernel cannot be tested alone due to its singularity
-        gpr = GaussianProcessRegressor(kernel=const * white)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        # constant kernel cannot be tested for jacobian alone due to singularity
+        self._gpr_grad(const * white)
 
     def test_white(self):
         white = WhiteKernel()
@@ -80,14 +82,7 @@ class KernelTestCase(unittest.TestCase):
         res = np.ones((3, 3)) * exp(-1)
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(rbf(self.X, self.X), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=rbf)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(rbf)
 
     def test_rbf_ard(self):
         rbf = RBFKernel(np.ones((3,)),
@@ -95,28 +90,14 @@ class KernelTestCase(unittest.TestCase):
         res = np.ones((3, 3)) * exp(-1)
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(rbf(self.X, self.X), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=rbf)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(rbf)
 
     def test_rational_quadratic_iso(self):
         rq = RationalQuadraticKernel(1., 1.)
         res = np.ones((3, 3)) * 0.5
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(rq(self.X, self.X), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=rq)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(rq)
 
     def test_rational_quadratic_ard(self):
         rq = RationalQuadraticKernel(1., np.ones((3,)),
@@ -124,14 +105,7 @@ class KernelTestCase(unittest.TestCase):
         res = np.ones((3, 3)) * 0.5
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(rq(self.X, self.X), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=rq)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(rq)
 
     def test_matern_iso(self):
         # d = 1
@@ -162,13 +136,7 @@ class KernelTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(matern5(self.X, self.X), res))
         # jacobian
         for matern in (matern1, matern3, matern5):
-            gpr = GaussianProcessRegressor(kernel=matern)
-            f = gpr._obj(self.X, self.y)
-            fun = lambda x: f(x)[0]
-            jac = lambda x: f(x)[1]
-            for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                      np.random.uniform(0., 1., (len(gpr.thetas),))):
-                self._check_grad(fun, jac, p)
+            self._gpr_grad(matern)
 
     def test_matern_ard(self):
         # d = 1
@@ -202,43 +170,23 @@ class KernelTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(matern5(self.X, self.X), res))
         # jacobian
         for matern in (matern1, matern3, matern5):
-            gpr = GaussianProcessRegressor(kernel=matern)
-            f = gpr._obj(self.X, self.y)
-            fun = lambda x: f(x)[0]
-            jac = lambda x: f(x)[1]
-            for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                      np.random.uniform(0., 1., (len(gpr.thetas),))):
-                self._check_grad(fun, jac, p)
+            self._gpr_grad(matern)
 
     def test_periodic_iso(self):
         periodic = PeriodicKernel(1., 1.)
-        res = np.ones((3, 3)) * exp(-4. * sin(1.)**2)
+        res = np.ones((3, 3)) * exp(-4. * sin(pi)**2)
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(periodic(self.X, self.X), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=periodic)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(periodic)
 
     def test_periodic_ard(self):
         periodic = PeriodicKernel(np.ones((3,)), np.ones((3,)),
                        p_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
                        l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
-        res = np.ones((3, 3)) * exp(-4. * sin(1.)**2)
+        res = np.ones((3, 3)) * exp(-4. * sin(pi)**2)
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(periodic(self.X, self.X), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=periodic)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(periodic)
 
     def test_spectral_iso(self):
         rbf = RBFKernel(1.)
@@ -250,14 +198,7 @@ class KernelTestCase(unittest.TestCase):
         angle[:, 2] = -2.
         self.assertTrue(np.allclose(rbf(self.X, self.Z) * np.cos(angle),
                                     spectral(self.X, self.Z)))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=spectral)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(spectral)
 
     def test_spectral_ard(self):
         rbf = RBFKernel(1.)
@@ -271,68 +212,36 @@ class KernelTestCase(unittest.TestCase):
         angle[:, 2] = -2.
         self.assertTrue(np.allclose(rbf(self.X, self.Z) * np.cos(angle),
                                     spectral(self.X, self.Z)))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=spectral)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(spectral)
 
     def test_linear_iso(self):
-        linear = LinearKernel(1.)
-        self.assertTrue(np.allclose(linear(self.X, self.X), self.X))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=linear)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        # homogenous linear often lead to degenerate kernel under random data
+        linear = LinearKernel(1.) + WhiteKernel()
+        self.assertTrue(np.allclose(linear(self.X, self.X), 2 * self.X))
+        res = np.array([[2, 1, 1], [1, 3, 2], [1, 2, 4]], dtype=float)
+        self.assertTrue(np.allclose(linear(self.Z, self.Z), res))
+        self._gpr_grad(linear)
 
     def test_linear_ard(self):
-        linear = LinearKernel(np.ones((3,)),
+        linear = WhiteKernel() + LinearKernel(np.ones((3,)),
                               l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
-        self.assertTrue(np.allclose(linear(self.X, self.X), self.X))
-        res = np.array([[1, 1, 1], [1, 2, 2], [1, 2, 3]], dtype=float)
+        self.assertTrue(np.allclose(linear(self.X, self.X), 2 * self.X))
+        res = np.array([[2, 1, 1], [1, 3, 2], [1, 2, 4]], dtype=float)
         self.assertTrue(np.allclose(linear(self.Z, self.Z), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=linear)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(linear)
 
     def test_neural_iso(self):
         neural = NeuralKernel(1., 1.)
         res = 2./pi * np.arcsin((np.ones((3, 3)) + np.eye(3)) / 3.)
         self.assertTrue(np.allclose(neural(self.X, self.X), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=neural)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(neural)
 
     def test_neural_ard(self):
         neural = NeuralKernel(1., np.ones((3,)),
                               l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
         res = 2./pi * np.arcsin((np.ones((3, 3)) + np.eye(3)) / 3.)
         self.assertTrue(np.allclose(neural(self.X, self.X), res))
-        # jacobian
-        gpr = GaussianProcessRegressor(kernel=neural)
-        f = gpr._obj(self.X, self.y)
-        fun = lambda x: f(x)[0]
-        jac = lambda x: f(x)[1]
-        for p in (np.ones((len(gpr.thetas),)), gpr.thetas.values,
-                  np.random.uniform(0., 1., (len(gpr.thetas),))):
-            self._check_grad(fun, jac, p)
+        self._gpr_grad(neural)
 
     def test_sum(self):
         ker = RBFKernel(1.) + WhiteKernel()
@@ -360,10 +269,9 @@ class KernelTestCase(unittest.TestCase):
 
     def test_gpr(self):
         k = self.X.shape[1]
-        ker = RBFKernel(l=np.ones((k,)),
-                        l_bounds=(np.ones((k,))*1e-4, np.ones((k,))*1e4)) + \
-              RationalQuadraticKernel() + \
-              WhiteKernel()
+        ker = 0.5 * RBFKernel() + \
+              0.4 * RationalQuadraticKernel() + \
+              0.3 * WhiteKernel()
         gpr = GaussianProcessRegressor(kernel=ker)
         # gradient
         f = gpr._obj(self.X, self.y)
@@ -409,20 +317,14 @@ class KernelTestCase(unittest.TestCase):
     # def test_tpc(self):
     #     pass
 
-    # # def test_bo(self):
-    # #     b = Bounds(np.array([-4., -4.]), np.array([4., 4.]))
-    # #     x = np.random.uniform(0., 3.5, (10, 2))
-    # #     try:
-    # #         bo = BayesianOptimizer(fun=beale, bounds=b, x0=x, acquisition='ei')
-    # #         print(bo.minimize())
-    # #     except Exception:
-    # #         self.fail('bayesian optimizer fails.')
-
-    # def test_svr(self):
-    #     pass
-
-    # def test_svc(self):
-    #     pass
+    # def test_bayes_opt(self):
+    #     b = Bounds(np.array([-4., -4.]), np.array([4., 4.]))
+    #     x = np.random.uniform(0., 3.5, (10, 2))
+    #     try:
+    #         bo = BayesianOptimizer(fun=beale, bounds=b, x0=x, acquisition='ei')
+    #         print(bo.minimize())
+    #     except Exception:
+    #         self.fail('bayesian optimizer fails.')
 
 
 if __name__ == '__main__':

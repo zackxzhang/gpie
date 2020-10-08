@@ -18,8 +18,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
 
     """
     Gaussian process regressor
-    models covariance function only
-    any mean function (e.g. linear trend) needs to be separately modelled
+    models covariance functions only and not mean functions (e.g. linear trend)
     """
 
     inferences = {'exact'}

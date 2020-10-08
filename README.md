@@ -27,11 +27,15 @@ Functionalities
     - elementwise exponentiation
     - Kronecker sum (under construction)
     - Kronecker product (under construction)
-- Gaussian process regressor
-- Gaussian process classifier (under construction)
-- t process regressor (under construction)
-- t process classifier (under construction)
+- Gaussian process
+    - regression
+    - classification (under construction)
+- t process (under construction)
+    - regression
+    - classification
 - Bayesian optimizer
+    - surrogate: Gaussian process, t process, etc
+    - acquisition: expected improvement, lower confidence bound, etc
 
 
 Features
@@ -39,7 +43,7 @@ Features
 - a couple of "avant-garde" kernels such as spectral kernel allow for exploration of new ideas
 - each kernel implements anisotropic variant besides isotropic one to support automatic relevance determination
 - a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", for example handcrafting composite kernels based on expert knowledge or exploiting special sturcture of datasets
-- core computations like marginal likelihood and analytical gradients are carefully formulated for speed and robustness
+- core computations such as likelihood and analytical gradient are carefully formulated for speed and robustness
 - Bayesian optimizer offers a powerful strategy in optimizing expensive-to-evaluate, black-box objectives
 
 
