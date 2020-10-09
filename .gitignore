@@ -136,5 +136,5 @@ dmypy.json
 # Mac stuff
 .DS_Store
 
-# under construction
-examples/
+# temporary tests
+tests/*.ipynb
