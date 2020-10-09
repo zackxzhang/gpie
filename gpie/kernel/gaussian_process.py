@@ -232,4 +232,3 @@ class tProcessRegressor(BayesianSupervisedModel):
 
     def posterior(self):
         pass
-
