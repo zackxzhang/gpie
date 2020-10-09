@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# gaussian process
+# gaussian process, t process
 
 import numpy as np                                                # type: ignore
 import warnings

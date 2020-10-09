@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from .optimizer import *
+from .optimizer import GradientDescentOptimizer

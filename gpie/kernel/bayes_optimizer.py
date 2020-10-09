@@ -7,9 +7,9 @@ import warnings
 from time import time
 from numpy import ndarray                                         # type: ignore
 from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
-from . import GradientDescentOptimizer
+from .gaussian_process import GaussianProcessRegressor, tProcessRegressor
 from ..base import Bounds, Optimizer
-from ..kernel import GaussianProcessRegressor, tProcessRegressor
+from ..infer import GradientDescentOptimizer
 from ..metric import dist
 from ..util import is_array
 

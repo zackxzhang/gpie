@@ -138,5 +138,3 @@ dmypy.json
 
 # under construction
 examples/
-pyproject.toml
-setup.cfg

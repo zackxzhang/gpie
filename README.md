@@ -17,7 +17,7 @@ Functionalities
     - radial basis function kernel
     - rational quadratic kernel
     - Matérn kernel
-    - Ornstein–Uhlenbeck kernel
+    - Ornstein-Uhlenbeck kernel
     - periodic kernel
     - spectral kernel
     - neural kernel

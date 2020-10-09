@@ -27,6 +27,7 @@ class KernelTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # test data
         cls.X = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
         cls.Z = np.array([[1, 0, 0], [1, 1, 0], [1, 1, 1]], dtype=float)
         cls.y = np.array([0.7, 0.5, 0.2])
@@ -35,6 +36,7 @@ class KernelTestCase(unittest.TestCase):
         cls.v = np.random.uniform(size=(5,))
 
     def _check_grad(self, fun, jac, x):
+        """ compare analytical gradient with finite-difference gradient """
         ag = jac(x)
         ng = approx_fprime(x, fun, 1e-8)
         err = np.amax(np.abs(ag - ng) / (np.abs(ag + ng) + 1e-2))
@@ -44,6 +46,7 @@ class KernelTestCase(unittest.TestCase):
             self.assertTrue(err < 5e-3)
 
     def _gpr_grad(self, kernel):
+        """ convert kernel jacobian to gpr gradient for simpler check """
         gpr = GaussianProcessRegressor(kernel=kernel)
         f = gpr._obj(self.U, self.v)
         fun = lambda x: f(x)[0]
@@ -215,7 +218,7 @@ class KernelTestCase(unittest.TestCase):
         self._gpr_grad(spectral)
 
     def test_linear_iso(self):
-        # homogenous linear often lead to degenerate kernel under random data
+        # homogenous linear kernel is poorly conditioned with random data
         linear = LinearKernel(1.) + WhiteKernel()
         self.assertTrue(np.allclose(linear(self.X, self.X), 2 * self.X))
         res = np.array([[2, 1, 1], [1, 3, 2], [1, 2, 4]], dtype=float)
