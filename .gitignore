@@ -136,5 +136,8 @@ dmypy.json
 # Mac stuff
 .DS_Store
 
+# README preview
+README.html
+
 # temporary tests
 tests/*.ipynb

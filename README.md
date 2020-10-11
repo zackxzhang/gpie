@@ -4,8 +4,9 @@
 - **simple**: an intuitive syntax inspired by scikit-learn
 - **minimal**: a compact core of expressive abstractions
 - **extensible**: a modular design for effortless composition
+- **lightweight**: as few dependencies as possible
 
-Note that the project is still **under construction** - please expect sharp edges and occasional API adjustments.
+This is a ongoing research project, and much of it is currently **under construction** - please expect bugs and sharp edges.
 
 
 ### Features
@@ -17,7 +18,7 @@ Note that the project is still **under construction** - please expect sharp edge
 - Bayesian optimizer offers a powerful strategy in optimizing expensive-to-evaluate, black-box objectives
 
 
-### Functionalities
+### Functionality
 
 - kernel functions
     - white kernel
@@ -33,27 +34,40 @@ Note that the project is still **under construction** - please expect sharp edge
     - elementwise sum
     - elementwise product
     - elementwise exponentiation
-    - Kronecker sum (under construction)
-    - Kronecker product (under construction)
+    - <span style="color:gray">Kronecker sum</span>
+    - <span style="color:gray">Kronecker product</span>
 - Gaussian process
     - regression
-    - classification (under construction)
-- t process (under construction)
-    - regression
-    - classification
+    - <span style="color:gray">classification</span>
+- <span style="color:gray">t process</span>
+    - <span style="color:gray">regression</span>
+    - <span style="color:gray">classification</span>
 - Bayesian optimizer
     - surrogate: Gaussian process, t process
-    - acquisition: expected improvement, lower confidence bound, etc
+    - acquisition: lower confidence bound, etc
+- <span style="color:gray">sampling inference (via MCMC)</span>
+    - <span style="color:gray">Metropolis-Hastings sampling</span>
+    - <span style="color:gray">Hamiltonian Monte Carlo + no-U-turn auto-tuning</span>
+- <span style="color:gray">variational inference</span>
 
-
-### Computational backend
-
-- linear algebra: numpy
-- optimization: scipy
-- sampling inference: pymc3
+Parts of the project <span style="color:gray">marked in grey color</span> are under construction.
 
 
 ### Examples
-Gaussian process regression on Mauna Loa CO<sub>2</sub>
+
+##### Gaussian process regression on Mauna Loa CO<sub>2</sub>
+In this example, we use Gaussian process to model the concentration of CO<sub>2</sub> at Mauna Loa as a function of time.
 ![alt text](./examples/mauna-loa-co2.png)
 In the plot, scattered dots represent historical observations, and shaded area shows the prediction interval made by a Gaussian process regressor trained on historical data.
+
+
+### Installation
+```bash
+pip install --upgrade gpie
+```
+coming soon on pip...
+
+### Backend
+
+- numpy: linear algebra, stochastic sampling
+- scipy: optimization, stochastic sampling

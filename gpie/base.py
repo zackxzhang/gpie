@@ -289,10 +289,27 @@ class Optimizer(ABC):
     def __init__(self):
         """ initialize optimizer object """
 
+    @abstractmethod
+    def minimize(self, *args):
+        """ main routine """
+
 
 class Sampler(ABC):
 
     @abstractmethod
     def __init__(self):
         """ initialize sampler object """
+
+    @abstractmethod
+    def sample(self, *args):
+        """ main routine"""
+
+
+class Density(ABC):
+
+    @abstractmethod
+    def __init__(self):
+        """ initialize density object """
+        # type of density, parameters, normalized or unnormalized,
+        # able to random sample or not
 
