@@ -36,13 +36,13 @@ class MatropolisHastingsSampler(MCMCSampler):
         super().__init__()
 
 
-class HamiltonianMCSampler(MCMCSampler):
+class HamiltonianSampler(MCMCSampler):
 
     def __init__(self):
         super().__init__()
 
 
-class NUTSampler(HamiltonianMCSampler):
+class NoUTurnSampler(HamiltonianSampler):
 
     def __init__(self):
         super().__init__()

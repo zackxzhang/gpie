@@ -6,7 +6,7 @@
 - **extensible**: a modular design for effortless composition
 - **lightweight**: as few dependencies as possible
 
-This is a ongoing research project, and much of it is currently **under construction** - please expect bugs and sharp edges.
+This is a ongoing research project with many parts currently **under construction** - please expect bugs and sharp edges.
 
 
 ### Features
@@ -34,23 +34,23 @@ This is a ongoing research project, and much of it is currently **under construc
     - elementwise sum
     - elementwise product
     - elementwise exponentiation
-    - <span style="color:gray">Kronecker sum</span>
-    - <span style="color:gray">Kronecker product</span>
+    - *Kronecker sum*
+    - *Kronecker product*
 - Gaussian process
     - regression
-    - <span style="color:gray">classification</span>
-- <span style="color:gray">t process</span>
-    - <span style="color:gray">regression</span>
-    - <span style="color:gray">classification</span>
+    - *classification*
+- *t process*
+    - *regression*
+    - *classification*
 - Bayesian optimizer
-    - surrogate: Gaussian process, t process
+    - surrogate: Gaussian process, *t process*
     - acquisition: lower confidence bound, etc
-- <span style="color:gray">sampling inference (via MCMC)</span>
-    - <span style="color:gray">Metropolis-Hastings sampling</span>
-    - <span style="color:gray">Hamiltonian Monte Carlo + no-U-turn auto-tuning</span>
-- <span style="color:gray">variational inference</span>
+- *sampling inference*
+    - *Metropolis-Hastings*
+    - *Hamiltonian + no-U-turn*
+- *variational inference*
 
-Parts of the project <span style="color:gray">marked in grey color</span> are under construction.
+Parts of the project *in italic font* are under construction.
 
 
 ### Examples
@@ -62,10 +62,17 @@ In the plot, scattered dots represent historical observations, and shaded area s
 
 
 ### Installation
+
+The fastest way to install GPie is from a prebuilt wheel using pip:
 ```bash
 pip install --upgrade gpie
 ```
-coming soon on pip...
+
+You can also install from source to try out the latest features (`pep517>=0.8.0` and `setuptools>=40.9.0` are needed):
+```bash
+pip install git+https://github.com/zack-x-zhang/gpie
+```
+
 
 ### Backend
 
