@@ -1,4 +1,9 @@
 # GPie
+[![Language](https://img.shields.io/github/languages/top/zack-x-zhang/gpie)](https://github.com/zack-x-zhang/gpie)
+[![Python](https://img.shields.io/pypi/pyversions/gpie)](https://www.python.org)
+[![PyPI](https://img.shields.io/pypi/v/gpie)](https://pypi.python.org/pypi/gpie)
+[![License](https://img.shields.io/github/license/zack-x-zhang/gpie)](https://opensource.org/licenses/BSD-3-Clause)
+
 **G**aussian **P**rocess t**i**ny **e**xplorer
 
 - **simple**: an intuitive syntax inspired by scikit-learn
