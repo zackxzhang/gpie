@@ -7,20 +7,21 @@ import warnings
 from functools import partial
 from numpy import ndarray                                         # type: ignore
 from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
-from ..base import Optimizer, Bounds
-from ..util import OPT_API
+from ..base import Optimizer, Bounds, OPT_BACKENDS
 
 
 class GradientDescentOptimizer(Optimizer):
 
+    backends = {'scipy'}
+
     def __init__(self, solver: str, bounds: Bounds, x0: ndarray,
                  fun: Optional[Callable] = None,
                  jac: Optional[Union[Callable, bool]] = None,
-                 n_restarts: int = 0, api='scipy'):
+                 n_restarts: int = 0, backend='scipy'):
 
         super().__init__()
         # configuration
-        self.api = api
+        self.backend = backend
         # algorithm
         self.min = solver
         # search space
@@ -39,15 +40,15 @@ class GradientDescentOptimizer(Optimizer):
         return str({'bounds': bounds, 'x0': self.X0})
 
     @property
-    def api(self):
-        return self._api
+    def backend(self):
+        return self._backend
 
-    @api.setter
-    def api(self, api: str):
-        if api == 'scipy':
-            self._api = api
+    @backend.setter
+    def backend(self, backend: str):
+        if backend == 'scipy':
+            self._backend = backend
         else:
-            raise ValueError('inteface must be one of {}'.format(OPT_API))
+            raise ValueError('backend must be one of {}'.format(OPT_BACKENDS))
 
     @property
     def min(self):
@@ -149,7 +150,7 @@ class GradientDescentOptimizer(Optimizer):
             return False, self.fun(self.bounds.lowers), self.bounds.lowers
 
         minimize = lambda x0: self.min(fun=self.fun, jac=self.jac, x0=x0,
-                                       bounds=self.bounds.get(api=self.api))
+                                       bounds=self.bounds.get(self.backend))
         results = [minimize(x0) for x0 in self.X0]
 
         if verbose:

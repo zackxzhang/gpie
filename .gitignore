@@ -139,5 +139,6 @@ dmypy.json
 # README preview
 README.html
 
-# temporary tests
+# under construction
 tests/*.ipynb
+

@@ -1,8 +1,8 @@
 # GPie
-[![Language](https://img.shields.io/github/languages/top/zack-x-zhang/gpie)](https://github.com/zack-x-zhang/gpie)
+[![Language](https://img.shields.io/github/languages/top/zackxzhang/gpie)](https://github.com/zackxzhang/gpie)
 [![Python](https://img.shields.io/pypi/pyversions/gpie)](https://www.python.org)
 [![PyPI](https://img.shields.io/pypi/v/gpie)](https://pypi.python.org/pypi/gpie)
-[![License](https://img.shields.io/github/license/zack-x-zhang/gpie)](https://opensource.org/licenses/BSD-3-Clause)
+[![License](https://img.shields.io/github/license/zackxzhang/gpie)](https://opensource.org/licenses/BSD-3-Clause)
 
 **G**aussian **P**rocess t**i**ny **e**xplorer
 
@@ -18,7 +18,7 @@ This is a ongoing research project with many parts currently **under constructio
 
 - several "avant-garde" kernels such as spectral kernel and neural kernel allow for exploration of new ideas
 - each kernel implements anisotropic variant besides isotropic one to support automatic relevance determination
-- a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", for example handcrafting composite kernels based on expert knowledge or exploiting special sturcture of datasets
+- a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", for example handcrafting composite kernels based on expert knowledge or exploiting special structure of datasets
 - core computations such as likelihood and analytical gradient are carefully formulated for speed and robustness
 - Bayesian optimizer offers a powerful strategy in optimizing expensive-to-evaluate, black-box objectives
 
@@ -31,16 +31,18 @@ This is a ongoing research project with many parts currently **under constructio
     - radial basis function kernel
     - rational quadratic kernel
     - Matérn kernel
-    - Ornstein-Uhlenbeck kernel
+        - Ornstein-Uhlenbeck kernel
     - periodic kernel
     - spectral kernel
     - neural kernel
 - kernel operators
-    - elementwise sum
-    - elementwise product
-    - elementwise exponentiation
-    - *Kronecker sum*
-    - *Kronecker product*
+    - Hadamard (element-wise)
+        - sum
+        - product
+        - exponentiation
+    - *Kronecker*
+        - *sum*
+        - *product*
 - Gaussian process
     - regression
     - *classification*
@@ -51,8 +53,10 @@ This is a ongoing research project with many parts currently **under constructio
     - surrogate: Gaussian process, *t process*
     - acquisition: lower confidence bound, etc
 - *sampling inference*
-    - *Metropolis-Hastings*
-    - *Hamiltonian + no-U-turn*
+    - *Markov chain Monte Carlo*
+        - *Metropolis-Hastings*
+        - *Hamiltonian + no-U-turn*
+    - *simulated annealing*
 - *variational inference*
 
 Parts of the project *in italic font* are under construction.
@@ -75,7 +79,7 @@ pip install --upgrade gpie
 
 You can also install from source to try out the latest features (`pep517>=0.8.0` and `setuptools>=40.9.0` are needed):
 ```bash
-pip install git+https://github.com/zack-x-zhang/gpie
+pip install --upgrade git+https://github.com/zackxzhang/gpie
 ```
 
 

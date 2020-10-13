@@ -7,8 +7,11 @@ import warnings
 from abc import ABC, abstractmethod
 from numpy import ndarray
 from typing import Callable, Optional, Sequence, Tuple, Type, Union, Iterable
-from .util import check_X_update, check_X_y, check_X_y_update, OPT_API, \
+from .util import check_X_update, check_X_y, check_X_y_update, \
                   is_array, map_array, concat_values, concat_bounds, V, B
+
+
+OPT_BACKENDS = ('scipy')
 
 
 class Bounds:
@@ -70,11 +73,11 @@ class Bounds:
         else:
             return False
 
-    def get(self, api: str = 'scipy'):
-        if api == 'scipy':
+    def get(self, backend: str = 'scipy'):
+        if backend == 'scipy':
             return scipy.optimize.Bounds(self.lowers, self.uppers)
         else:
-            raise ValueError('inteface must be one of {}'.format(OPT_API))
+            raise ValueError('backend must be one of {}'.format(OPT_BACKENDS))
 
     @classmethod
     def from_seq(cls, bounds: Sequence[B], transform: Callable = lambda x: x):

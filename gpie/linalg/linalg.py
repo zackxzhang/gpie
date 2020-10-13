@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# robust and efficient matrix computations
+# matrix computations
 
 import numpy as np                                                # type: ignore
 from numpy import ndarray
