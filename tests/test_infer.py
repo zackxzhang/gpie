@@ -3,8 +3,10 @@
 
 import numpy as np                                                # type: ignore
 import unittest
+from math import exp, log
 from gpie.base import Bounds
-from gpie.infer import GradientDescentOptimizer
+from gpie.infer import GradientDescentOptimizer, \
+                       LogDensity, Gaussian, MatropolisHastingsSampler
 
 
 def beale(x1_x2) -> float:
@@ -21,7 +23,7 @@ def beale(x1_x2) -> float:
 
 class InferTestCase(unittest.TestCase):
 
-    def test_gradient_descent_optimizer(self):
+    def test_grad_opt(self):
         b = Bounds(np.array([-4., -4.]), np.array([4., 4.]))
         x = np.array([2.5, 1.])
         try:
@@ -30,7 +32,17 @@ class InferTestCase(unittest.TestCase):
             gdo.jac = False
             print(gdo.minimize())
         except Exception:
-            self.fail('gdo fails.')
+            self.fail('gradient optimizer fails.')
+
+    def test_metropolis(self):
+        def log_p(x):
+            return log(0.3 * exp(-0.2 * x**2) + 0.7 * exp(-0.2 * (x-10.) **2))
+        try:
+            mhs = MatropolisHastingsSampler(LogDensity(log_p), Gaussian(),
+                                            np.zeros((1,)))
+            print(mhs.sample())
+        except Exception:
+            self.fail('Metropolis sampler fails.')
 
 
 if __name__ == '__main__':

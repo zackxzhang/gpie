@@ -55,17 +55,17 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
+# Django stuff
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Flask stuff:
+# Flask stuff
 instance/
 .webassets-cache
 
-# Scrapy stuff:
+# Scrapy stuff
 .scrapy
 
 # Sphinx documentation
@@ -129,12 +129,15 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Sublime Text
+# Sublime Text project settings
 *.sublime-workspace
 *.sublime-project
 
 # Mac stuff
 .DS_Store
+
+# pickle
+*.pkl
 
 # README preview
 README.html

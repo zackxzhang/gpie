@@ -3,8 +3,8 @@
 
 import numpy as np                                                # type: ignore
 from abc import ABC, abstractmethod
-from numpy import ndarray
-from scipy.stats import multivariate_normal                       # type: ignore
+from numpy import ndarray, newaxis
+from scipy.stats import multivariate_normal, uniform # type: ignore
 from typing import Callable
 
 
@@ -63,43 +63,71 @@ class LogDensity(Density, UnnormalizedMixedin, AsymmetricMixin):
         return self.log_dst(x)
 
 
-class Uniform(Density, NormalizedMixedin, SymmetricMixin):
-
-    def __init__(self):
-        super().__init__()
-
-    def proposal(self, dst: ndarray, src: ndarray):
-        pass
-
-    def sample(self):
-        # generate sample
-        pass
-
-    def __call__(self, x):
-        # evaluate density given input x
-        pass
-
-
 class Gaussian(Density, NormalizedMixedin, SymmetricMixin):
+    """ multivariate Gaussian (normal) density """
 
     def __init__(self, mu: ndarray = np.zeros((1,)),
-                cov: ndarray = np.ones((1,))):
+                 cov: ndarray = np.ones((1,))):
         super().__init__()
-        self.mu = mu
-        self.cov =  cov
-        self.dst = multivariate_normal(self.mu, self.cov)
+        self.parametrise(mu=mu, cov=cov)
 
-    def propose(self, x: ndarray):
-        self.mu = x
+    def parametrise(self, **kwargs):
+        if 'mu' in kwargs:
+            self.mu = kwargs['mu']
+        if 'cov' in kwargs:
+            self.cov = kwargs['cov']
         self.dst = multivariate_normal(self.mu, self.cov)
-        x_star = self.sample(1)
-        log_ratio = self._log_ratio(x_star, x)
-        return x_star, log_ratio
-
-    def sample(self, size: int = 1):
-        return self.dst.rvs(size=size)
 
     def __call__(self, x: ndarray, log: bool = False):
         if log:
             return self.dst.logpdf(x)
-        return self.dst.pdf(x)
+        else:
+            return self.dst.pdf(x)
+
+    def sample(self, size: int = 1):
+        return self.dst.rvs(size=size)
+
+    def propose(self, x: ndarray, style: str = 'local'):
+        """ sample x_star from q(x_star|x) """
+        if style == 'local':
+            self.parametrise(mu=x)
+        x_star = self.sample(1)
+        return x_star, self._log_ratio(x_star, x)
+
+
+class Uniform(Density, NormalizedMixedin, SymmetricMixin):
+    """ independent(!) multivariate uniform density """
+
+    def __init__(self, a: ndarray = np.zeros((1,)),
+                b: ndarray = np.ones((1,))):
+        super().__init__()
+        self.parametrise(a=a, b=b)
+
+    def parametrise(self, **kwargs):
+        if 'a' in kwargs:
+            self.a = kwargs['a']
+        if 'b' in kwargs:
+            self.b = kwargs['b']
+        self.dst = list()
+        for l, s in zip(self.a, self.b):
+            self.dst.append(uniform(l, s))
+
+    def __call__(self, x: ndarray, log: bool = False):
+        if log:
+            log_pdf = 0.
+            for xx, dd in zip(x, self.dst):
+                log_pdf += dd.logpdf(xx)
+            return log_pdf
+        else:
+            pdf = 1.
+            for xx, dd in zip(x, self.dst):
+                pdf *= dd.pdf(xx)
+            return pdf
+
+    def sample(self, size: int = 1):
+        return np.hstack([dd.rvs(size)[:, newaxis] for dd in self.dst])
+
+    def propose(self, x: ndarray, style: str = 'local'):
+        raise NotImplementedError
+        x_star = self.sample(1)
+        return x_star, self._log_ratio(x_star, x)
