@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# model skeletons
+# shared classes
 
 import numpy as np                                                # type: ignore
 import scipy                                                      # type: ignore
@@ -293,7 +293,7 @@ class Optimizer(ABC):
         """ initialize optimizer object """
 
     @abstractmethod
-    def minimize(self, *args):
+    def minimize(self):
         """ main routine """
 
 
@@ -304,15 +304,5 @@ class Sampler(ABC):
         """ initialize sampler object """
 
     @abstractmethod
-    def sample(self, *args):
-        """ main routine"""
-
-
-class Density(ABC):
-
-    @abstractmethod
-    def __init__(self):
-        """ initialize density object """
-        # type of density, parameters, normalized or unnormalized,
-        # able to random sample or not
-
+    def sample(self):
+        """ main routine """

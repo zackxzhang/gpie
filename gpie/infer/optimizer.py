@@ -12,6 +12,11 @@ from ..base import Optimizer, Bounds, OPT_BACKENDS
 
 class GradientDescentOptimizer(Optimizer):
 
+    """
+    gradient descent optimizer
+    wrapper of optimizer backends
+    """
+
     backends = {'scipy'}
 
     def __init__(self, solver: str, bounds: Bounds, x0: ndarray,
@@ -122,7 +127,7 @@ class GradientDescentOptimizer(Optimizer):
                 raise ValueError('n_restarts must be a nonnegative integer.')
         self._n_restarts = n_restarts
 
-    def _restarts(self):
+    def _restart(self):
         if self.n_restarts == 0:
             return
         X = np.random.uniform(low=self.bounds.lowers, high=self.bounds.uppers,
@@ -132,7 +137,7 @@ class GradientDescentOptimizer(Optimizer):
         else:
             self.X0 = np.vstack([self.X0, X])
 
-    def _checks(self):
+    def _check(self):
         if self.fun is None:
             raise AttributeError('function is not set.')
         if self.jac is None:
@@ -141,8 +146,8 @@ class GradientDescentOptimizer(Optimizer):
     def minimize(self, verbose: bool = False) -> Tuple[bool, float, ndarray]:
 
         assert isinstance(verbose, bool)
-        self._checks()  # other attribute must be set by now
-        self._restarts()
+        self._check()  # other attribute must be set by now
+        self._restart()
 
         if self.bounds.clamped():
             warnings.warn( 'no optimization performed '

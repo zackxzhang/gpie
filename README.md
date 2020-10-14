@@ -52,10 +52,11 @@ This is a ongoing research project with many parts currently **under constructio
 - Bayesian optimizer
     - surrogate: Gaussian process, *t process*
     - acquisition: lower confidence bound, etc
-- *sampling inference*
-    - *Markov chain Monte Carlo*
-        - *Metropolis-Hastings*
-        - *Hamiltonian + no-U-turn*
+- sampling inference
+    - Markov chain Monte Carlo
+        - Metropolis-Hastings
+        - *Hamiltonian*
+        - *no-U-turn*
     - *simulated annealing*
 - *variational inference*
 

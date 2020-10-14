@@ -14,6 +14,7 @@ from ..util import audit_X, audit_X_Z, B, V, is_array, concat_bounds
 
 
 def check_operand(operator):
+    """ decorator for overloading kernel operators """
     @wraps(operator)
     def wrapped_operator(self, operand):
         if isinstance(operand, Kernel):
@@ -64,7 +65,7 @@ class Kernel(Model):
     @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
         """
-        computer kernel (covariance) between inputs
+        compute kernel K(X, Z)
         """
 
     @check_operand
@@ -108,7 +109,7 @@ class Kernel(Model):
 
 
 class Sum(Kernel):
-    """ elementwise sum operator """
+    """ elementwise sum of two kernels """
 
     def __init__(self, k1: Kernel, k2: Kernel):
         self._k1 = k1
@@ -169,7 +170,7 @@ class Sum(Kernel):
 
 
 class Product(Kernel):
-    """ elementwise product operator"""
+    """ elementwise product of two kernels """
 
     def __init__(self, k1: Kernel, k2: Kernel):
         self._k1 = k1
@@ -230,7 +231,7 @@ class Product(Kernel):
 
 
 class Exponetiation(Kernel):
-    """ elementwise exponentiation operator """
+    """ elementwise exponentiation of a kernel """
 
     def __init__(self, k: Kernel, exponent: Union[int, float]):
         self._k = k
@@ -282,7 +283,7 @@ class Exponetiation(Kernel):
 
 
 class KroneckerSum(Kernel):
-    """ Kronecker sum operator """
+    """ Kronecker sum of two kernels """
 
     def __init__(self, k1: Kernel, k2: Kernel):
         self._k1 = k1
@@ -341,7 +342,7 @@ class KroneckerSum(Kernel):
 
 
 class KroneckerProduct(Kernel):
-    """ Kronecker product operator """
+    """ Kronecker product kernels """
 
     def __init__(self, k1: Kernel, k2: Kernel):
         self._k1 = k1
