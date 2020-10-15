@@ -2,9 +2,10 @@
 # markov chain monte carlo
 
 import numpy as np                                                # type: ignore
+from multiprocessing import Pool
 from numpy import ndarray
-from .densities import Density
 from ..base import Sampler
+from .densities import Density
 
 
 class MCMCSampler(Sampler):
@@ -71,7 +72,6 @@ class MatropolisHastingsSampler(MCMCSampler):
         if not (isinstance(x0, ndarray) and x0.ndim in (1, 2) and \
                 x0.dtype == np.number and np.all(np.isfinite(x0))):
             raise TypeError('x0 must be a 1d or 2d numeric array.')
-        if x0.ndim == 2: raise NotImplementedError
         X0 = np.atleast_2d(x0)
         self._X0 = X0
 
@@ -94,18 +94,17 @@ class MatropolisHastingsSampler(MCMCSampler):
 
     def _restart(self):
         if self.n_restarts == 0:
-            return
-        raise NotImplementedError  # add bounds into the picture of sampler
-        X = np.random.uniform(low=self.bounds.lowers, high=self.bounds.uppers,
-                              size=(self.n_restarts, len(self.bounds)))
-        if self.X0 is None:
-            self.X0 = X
-        else:
-            self.X0 = np.vstack([self.X0, X])
+            return False
+        X = np.random.normal(0., 1., size=(self.n_restarts, self.X0.shape[1]))
+        # FIXME: perturb user-provided x0 by multiplication with random noise
+        # np.einsum('ij,j->ij', X, self.X0[0])
+        # but consider the case with multiple x0's
+        self.X0 = np.vstack([self.X0, X])
+        return True
 
-    def sample(self, verbose: bool = False):
+    def _sample(self, x0):
         # intiailize
-        x = self.X0[0]
+        x = x0
         log_u = np.log(np.random.uniform(0, 1, size=(self.n_samples,)))
         chain = np.zeros((self.n_samples, len(x)))
         # Metropolis–Hastings
@@ -118,14 +117,28 @@ class MatropolisHastingsSampler(MCMCSampler):
                 chain[i] = x
         return chain
 
+    def sample(self, n_jobs: int = 4, verbose: bool = False):
+        if self._restart():
+            with Pool(n_jobs) as pool:
+                chains = pool.map(self._sample, self.X0)
+            return chains
+        else:
+            return self._sample(self.X0[0])
 
-class HamiltonianSampler(MCMCSampler):
+
+class HamiltonianMCSampler(MCMCSampler):
 
     def __init__(self):
         super().__init__()
 
 
-class NoUTurnSampler(HamiltonianSampler):
+class NoUTurnSampler(HamiltonianMCSampler):
+
+    def __init__(self):
+        super().__init__()
+
+
+class SimulatedAnnealingSampler(MCMCSampler):
 
     def __init__(self):
         super().__init__()

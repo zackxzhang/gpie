@@ -9,7 +9,7 @@
 - **simple**: an intuitive syntax inspired by scikit-learn
 - **powerful**: a compact core of expressive abstractions
 - **extensible**: a modular design for effortless composition
-- **light-weight**: minimal dependencies (only numpy and scipy so far)
+- **lightweight**: minimal dependencies (only numpy and scipy besides standard library)
 
 This is a ongoing research project with many parts currently **under construction** - please expect bugs and sharp edges.
 
@@ -58,6 +58,7 @@ This is a ongoing research project with many parts currently **under constructio
         - *no-U-turn*
     - *simulated annealing*
 - *variational inference*
+
 Note: parts of the project *in italic font* are under construction.
 
 
@@ -72,7 +73,7 @@ In the plot, scattered dots represent historical observations, and shaded area s
 
 ### Installation
 
-The fastest way to install GPie is from a prebuilt wheel using pip:
+The easiest way to install GPie is from a prebuilt wheel using pip:
 ```bash
 pip install --upgrade gpie
 ```

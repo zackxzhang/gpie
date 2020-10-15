@@ -5,7 +5,8 @@ import numpy as np                                                # type: ignore
 import scipy                                                      # type: ignore
 import warnings
 from functools import partial
-from numpy import ndarray                                         # type: ignore
+from multiprocessing import Pool
+from numpy import ndarray
 from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
 from ..base import Optimizer, Bounds, OPT_BACKENDS
 

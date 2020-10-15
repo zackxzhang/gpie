@@ -8,10 +8,10 @@ from numpy import ndarray
 from scipy.linalg import cho_solve, cholesky                      # type: ignore
 from scipy.stats import norm                                      # type: ignore
 from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
-from .kernels import Kernel, RBFKernel, WhiteKernel
 from ..base import BayesianSupervisedModel, Thetas
 from ..infer import GradientDescentOptimizer
 from ..util import audit_X_Z, audit_X_y, audit_X_y_update, is_array
+from .kernels import Kernel, RBFKernel, WhiteKernel
 
 
 class GaussianProcessRegressor(BayesianSupervisedModel):

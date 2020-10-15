@@ -21,6 +21,10 @@ def beale(x1_x2) -> float:
            (2.625 - x1 + x1 * x2**3) ** 2
 
 
+def log_p(x):
+    return log(0.3 * exp(-0.2 * x**2) + 0.7 * exp(-0.2 * (x-10.) **2))
+
+
 class InferTestCase(unittest.TestCase):
 
     def test_grad_opt(self):
@@ -35,12 +39,15 @@ class InferTestCase(unittest.TestCase):
             self.fail('gradient optimizer fails.')
 
     def test_metropolis(self):
-        def log_p(x):
-            return log(0.3 * exp(-0.2 * x**2) + 0.7 * exp(-0.2 * (x-10.) **2))
         try:
-            mhs = MatropolisHastingsSampler(LogDensity(log_p), Gaussian(),
-                                            np.zeros((1,)))
-            print(mhs.sample())
+            mhs1 = MatropolisHastingsSampler(LogDensity(log_p), Gaussian(),
+                                            np.zeros((1,)), n_restarts=0)
+            chain = mhs1.sample()
+            print(chain)
+            mhs2 = MatropolisHastingsSampler(LogDensity(log_p), Gaussian(),
+                                            np.zeros((1,)), n_restarts=2)
+            chains = mhs2.sample()
+            print(chains)
         except Exception:
             self.fail('Metropolis sampler fails.')
 
