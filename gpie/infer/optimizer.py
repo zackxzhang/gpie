@@ -154,7 +154,7 @@ class GradientDescentOptimizer(Optimizer):
             warnings.warn( 'no optimization performed '
                            'since parameters are fixed.' )
             return False, self.fun(self.bounds.lowers), self.bounds.lowers
-
+        # FIXME: parallelize
         minimize = lambda x0: self.min(fun=self.fun, jac=self.jac, x0=x0,
                                        bounds=self.bounds.get(self.backend))
         results = [minimize(x0) for x0 in self.X0]
@@ -167,6 +167,14 @@ class GradientDescentOptimizer(Optimizer):
         y = np.array([res['fun'] for res in results])
 
         if np.any(b):
-            return True, y[b].min(), X[b][y[b].argmin()]
+            if verbose:
+                raise NotImplementedError
+                # return best trajectory
+            else:
+                return True, y[b].min(), X[b][y[b].argmin()]
         else:
-            return False, y.min(), X[y.argmin()]
+            if verbose:
+                raise NotImplementedError
+                # return all trajectory
+            else:
+                return False, y.min(), X[y.argmin()]

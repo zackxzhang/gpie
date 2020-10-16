@@ -1056,6 +1056,7 @@ class PeriodicKernel(Kernel, StationaryMixin):
         K = np.exp(R2_l2 / -2.)
         return K
 
+# FIXME: add CosineKernel, spectral kernel = RBFKernel * CosineKernel?
 
 class SpectralKernel(Kernel, StationaryMixin):
     """
@@ -1206,7 +1207,7 @@ class LinearKernel(Kernel, NonStationaryMixin):
     linear kernel
 
     k(x,z) = (x/l).T @ (z/l)
-
+    # FIXME: reparametrise ((x-c)/l).T @ ((z-c)/l)?
     l (length scale): positive float (isotropic) or positive array (anisotropic)
     """
 

@@ -9,7 +9,7 @@
 - **simple**: an intuitive syntax inspired by scikit-learn
 - **powerful**: a compact core of expressive abstractions
 - **extensible**: a modular design for effortless composition
-- **lightweight**: minimal dependencies (only numpy and scipy besides standard library)
+- **lightweight**: minimal dependencies (standard library, numpy, scipy)
 
 This is a ongoing research project with many parts currently **under construction** - please expect bugs and sharp edges.
 
@@ -50,7 +50,7 @@ This is a ongoing research project with many parts currently **under constructio
     - *classification*
 - Bayesian optimizer
     - surrogate: Gaussian process, *t process*
-    - acquisition: lower confidence bound, etc
+    - acquisition: PI, EI, LCB
 - sampling inference
     - Markov chain Monte Carlo
         - Metropolis-Hastings
@@ -67,6 +67,22 @@ Note: parts of the project *in italic font* are under construction.
 ##### Gaussian process regression on Mauna Loa CO<sub>2</sub>
 
 In this example, we use Gaussian process to model the concentration of CO<sub>2</sub> at Mauna Loa as a function of time.
+```python
+# handcraft a composite kernel based on expert knowledge
+# long-term trend
+k1 = 30.0**2 * RBFKernel(l=200.0)
+# seasonal variations
+k2 = 3.0**2 * RBFKernel(l=200.0) * PeriodicKernel(p=1.0, l=1.0)
+# medium-term irregularities
+k3 = 0.5**2 * RationalQuadraticKernel(m=0.8, l=1.0)
+# noise
+k4 = 0.1**2 * RBFKernel(l=0.1) + 0.2**2 * WhiteKernel()
+# composite kernel
+kernel = k1 + k2 + k3 + k4
+# train GPR on data
+gpr = GaussianProcessRegressor(kernel=kernel)
+gpr.fit(X, y)
+```
 ![alt text](./examples/mauna-loa-co2.png)
 In the plot, scattered dots represent historical observations, and shaded area shows the prediction interval made by a Gaussian process regressor trained on historical data.
 

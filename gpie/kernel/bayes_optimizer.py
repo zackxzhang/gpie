@@ -154,7 +154,7 @@ class BayesianOptimizer(Optimizer):
         self._X = np.vstack([self.X, X])
         self._y = np.append(self.y, y)
         # update surrogate
-        self.surrogate.update(X, y)
+        self.surrogate.fit(self.X, self.y)
 
     def minimize(self, verbose: bool = False) -> Tuple[float, ndarray]:
         genesis = time()
@@ -169,4 +169,7 @@ class BayesianOptimizer(Optimizer):
                     break
                 self._update()
 
-        return self.y.min(), self.X[self.y.argmin()]
+        if verbose:
+            return self.y, self.X
+        else:
+            return self.y.min(), self.X[self.y.argmin()]

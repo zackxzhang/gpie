@@ -311,23 +311,23 @@ class KernelTestCase(unittest.TestCase):
         except Exception:
             self.fail('gpr predict prob fails.')
 
-    # def test_tpr(self):
+    # def test_gpc(self):
     #     pass
 
-    # def test_gpc(self):
+    # def test_tpr(self):
     #     pass
 
     # def test_tpc(self):
     #     pass
 
-    # def test_bayes_opt(self):
-    #     b = Bounds(np.array([-4., -4.]), np.array([4., 4.]))
-    #     x = np.random.uniform(0., 3.5, (10, 2))
-    #     try:
-    #         bo = BayesianOptimizer(fun=beale, bounds=b, x0=x, acquisition='ei')
-    #         print(bo.minimize())
-    #     except Exception:
-    #         self.fail('bayesian optimizer fails.')
+    def test_bayes_opt(self):
+        b = Bounds(np.array([-4., -4.]), np.array([4., 4.]))
+        x = np.random.uniform(0., 3.5, (10, 2))
+        try:
+            bo = BayesianOptimizer(fun=beale, bounds=b, x0=x, acquisition='ei')
+            print(bo.minimize())
+        except Exception:
+            self.fail('bayesian optimizer fails.')
 
 
 if __name__ == '__main__':

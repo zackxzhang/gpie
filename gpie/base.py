@@ -65,7 +65,8 @@ class Bounds:
     def contains(self, values: ndarray) -> bool:
         if values.shape != self.lowers.shape:
             raise ValueError('dimension of values must agree with bounds.')
-        return np.all(self.lowers <= values) and np.all(values <= self.uppers)
+        return np.all(self.lowers - 1e-8 <= values) and \
+               np.all(self.uppers + 1e-8 >= values)
 
     def clamped(self) -> bool:  # FIXME: use fixed or not to replace it
         if np.allclose(self.lowers, self.uppers):
@@ -137,7 +138,9 @@ class Thetas:
         if not is_array(values, 1, np.number):
             raise TypeError('values must be 1d numeric array.')
         if not self.bounds.contains(values):
-            raise ValueError( 'lower bounds must not exceed upper bounds and ',
+            print('values', values)
+            print('bounds', self.bounds)
+            raise ValueError( 'lower bounds must not exceed upper bounds and '
                               'each value must obey its lowers/upper bounds.'  )
         self._values = values
 
