@@ -101,10 +101,10 @@ class MarkovChainSampler(Sampler):
     def _sample(self, x0):
         """ sample from one chain """
 
-    def sample(self, n_jobs: int = 4, verbose: bool = False):
+    def sample(self, verbose: bool = False):
         """ sample from multiple chains """
         if self._restart():
-            with Pool(n_jobs) as pool:
+            with Pool(self.n_restarts+1) as pool:
                 chains = pool.map(self._sample, self.X0)
             return chains
         else:
@@ -125,7 +125,7 @@ class MarkovChainMonteCarloSampler(MarkovChainSampler):
         chain = np.zeros((self.n_samples, len(x)))
         # Metropolis–Hastings
         for i in range(-self.n_burns, self.n_samples):
-            x_star, accept = self.q.propose(x)
+            x_star, accept = self.q.propose(x)  # FIXME: handle bounds
             accept += self.log_p(x_star) - self.log_p(x)
             if log_u[i] < accept: # accept
                 x = x_star

@@ -164,13 +164,14 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
 
     def hyper_prior(self, n_samples: int = 0):
         super().hyper_prior(n_samples)
+        raise NotImplementedError
         if n_samples <= 0:
-            return Dirac(self.thetas.values)
+            return
         else:
-            return Dirac(self.thetas.values).sample(n_samples)
-        # only support dirac distributed θ for now
+            return
+        # only support uninformative prior θ for now
 
-    def hyper_posterior(self, n_samples: int = 0):
+    def hyper_posterior(self, n_samples: int = 0, **kwargs):
         super().hyper_posterior(n_samples)
         hyper_posterior = LogDensity(partial(self._obj(self.X, self.y),
                                              grad=False)               )
@@ -179,9 +180,10 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         else:
             k = len(self.thetas)
             sampler = MarkovChainMonteCarloSampler(hyper_posterior,
-                          Gaussian(np.zeros(k), np.eye(k)), self.thetas.values)
+                          Gaussian(np.zeros(k), np.eye(k)),
+                          self.thetas.values, **kwargs)
             return sampler.sample(n_samples)
-        # only support dirac distributed θ for now
+        # only support uninformative prior θ for now
 
     def fit(self, X: ndarray, y: ndarray, verbose: bool = False):
         """ MAP estimatem under uniform prior """
@@ -221,7 +223,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             return prior
         else:
             return prior.sample(n_samples)
-        # only support dirac distributed θ for now
+        # only support uninformative prior θ for now
 
     def posterior_predictive(self, X: ndarray, n_samples: int = 0) \
         -> Union[Gaussian, ndarray]:
@@ -239,7 +241,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             return posterior
         else:
             return posterior.sample(n_samples)
-        # only support dirac distributed θ for now
+        # only support uninformative prior θ for now
 
 
 class tProcessRegressor(BayesianSupervisedModel):
