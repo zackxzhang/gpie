@@ -112,14 +112,14 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         def fun_pi(x: ndarray, xi=.01) -> float:
             assert is_array(x, 1, np.number)
             assert isinstance(xi, float) and xi > 0.
-            mu, var = self.predict_prob(x[np.newaxis, :])
+            mu, var = self.predictive(x[np.newaxis, :])
             mu, sigma = mu.item(), sqrt(var.item())
             y_min = self.y.min()
             return norm.cdf(y_min, mu + xi, sigma)
         # expected improvement
         def fun_ei(x: ndarray) -> float:
             assert is_array(x, 1, np.number)
-            mu, var = self.predict_prob(x[np.newaxis, :])
+            mu, var = self.predictive(x[np.newaxis, :])
             mu, sigma = mu.item(), sqrt(var.item())
             y_min = self.y.min()
             return (y_min - mu) * norm.cdf(y_min, mu, sigma) + \
@@ -128,7 +128,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         def fun_lcb(x: ndarray, beta: float = 1.) -> float:
             assert is_array(x, 1, np.number)
             assert isinstance(beta, float) and beta > 0.
-            mu, var = self.predict_prob(x[np.newaxis, :])
+            mu, var = self.predictive(x[np.newaxis, :])
             mu, sigma = mu.item(), sqrt(var.item())
             return mu - beta * sigma
         # entropy search
@@ -155,10 +155,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         if n_restarts is not None:
             self.optimizer.n_restarts = n_restarts
 
-    def prior(self, *args):
-        raise NotImplementedError
-
-    def posterior(self, *args):
+    def p_hyper(self):
         raise NotImplementedError
 
     def fit(self, X: ndarray, y: ndarray, verbose: bool = False):
@@ -185,8 +182,10 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         mu = np.einsum('ij,j->i', Kzx, self.dual_weights)
         return mu
 
-    def predict_prob(self, X: ndarray):
-        super().predict_prob(X)
+    def predictive(self, X: ndarray, n_samples: int = 0):
+        super().predictive(X, n_samples)
+        if n_samples > 0:
+            raise NotImplementedError  # predictive sampling coming soon
         Kzx = self.kernel(X, self.X)
         Kzz = self.kernel(X, X)
         mu = np.einsum('ij,j->i', Kzx, self.dual_weights)
@@ -195,7 +194,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             warnings.warn('posterior covariance matrix has negative elements. '
                           'possibly numerical issues. correcting to 0.')
         cov[cov < 0.] = 0.
-        return mu, cov
+        return mu, cov  # FIXME: change to return a Gaussian object
 
 
 class tProcessRegressor(BayesianSupervisedModel):

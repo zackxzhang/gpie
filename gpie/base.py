@@ -14,6 +14,33 @@ from .util import check_X_update, check_X_y, check_X_y_update, \
 OPT_BACKENDS = ('scipy')
 
 
+class Density(ABC):
+    """ unnormalized probability density """
+
+    @abstractmethod
+    def __init__(self):
+        """ initialize density object """
+
+    @abstractmethod
+    def __call__(self, x):
+        """ evaluate density at x """
+
+    @abstractmethod
+    def symmetric(self) -> bool:
+        """ symmetric or asymmetric """
+
+    def _log_ratio(self, x_star, x):
+        """ q(x|x_star) / q(x_star|x) """
+        if self.symmetric():
+            return 0.
+        else:
+            raise NotImplementedError
+
+
+class Distribution(Density):
+    """ normalized probability density """
+
+
 class Bounds:
     """
     Thetas' component
@@ -93,7 +120,8 @@ class Thetas:
     """
 
     def __init__(self, values: ndarray = np.array([]),
-                 bounds: Bounds = Bounds()):
+                 bounds: Bounds = Bounds(),
+                 densities: Optional[Sequence[Density]] = None):
         if not isinstance(bounds, Bounds):
             raise TypeError('bounds must be Bounds object.')
         self._bounds = bounds
@@ -145,6 +173,11 @@ class Thetas:
         self._values = values
 
     def assigned(self) -> bool:
+        """
+        parameters are assigned with values/distribution or not
+        special case: zero-size theta returns True
+        """
+        # FIXME: returns True if thetas has None as values but has prior dst
         return np.all(np.isfinite(self.values))
 
 
@@ -200,9 +233,21 @@ class Model(ABC):
     def __init__(self, *args, **kwargs):
         """ initialize model object """
 
+    @property
     @abstractmethod
+    def thetas(self):
+        """ core parametrisation of the model """
+
+    def parametrised(self) -> bool:
+        """ model parameters assigned with values or not """
+        return self.thetas.assigned()
+
     def fitted(self) -> bool:
-        """ model parameters are assigned or not """
+        """ model fitted on data or not """
+        if hasattr(self, 'X'):
+            return True
+        else:
+            return False
 
 
 class UnsupervisedModel(Model):
@@ -210,7 +255,6 @@ class UnsupervisedModel(Model):
     @abstractmethod
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.X = None
 
     @abstractmethod
     def fit(self, X: ndarray):
@@ -236,8 +280,6 @@ class SupervisedModel(Model):
     @abstractmethod
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.X = None
-        self.y = None
 
     @abstractmethod
     def fit(self, X: ndarray, y: ndarray, verbose: bool = False):
@@ -247,9 +289,9 @@ class SupervisedModel(Model):
 
     @abstractmethod
     def predict(self, X: ndarray):
-        if not self.fitted():
-            raise AttributeError('model is not fitted yet.')
-        if self.X is not None:
+        if not self.parametrised():
+            raise AttributeError('model not parametrised yet.')
+        if self.fitted():
             check_X_update(self.X, X)
 
     @abstractmethod
@@ -263,19 +305,40 @@ class SupervisedModel(Model):
 
 class BayesianSupervisedModel(SupervisedModel):
 
-    @abstractmethod
-    def prior(self, *args):
-        """ set prior """
 
     @abstractmethod
-    def posterior(self, *args):
-        """ compute posterior """
+    def p_hyper(self):
+        """
+        .......... distribution of thetas
+        prior      , if model is not fitted on data
+        poesterior , if model is fitted on data
+        """
+        # FIXME: check if thetas has prior distributions or just a point value
+        if not self.parametrised():
+            raise AttributeError('model not parametrised yet.')
+        if self.fitted():
+            pass # print('generating hyper posterior...')
+        else:
+            pass # print('generating hyper prior...')
 
     @abstractmethod
-    def predict_prob(self, X: ndarray):
-        if not self.fitted():
-            raise AttributeError('model is not fitted yet.')
-        check_X_update(self.X, X)
+    def predictive(self, X: ndarray, n_samples: int = 0):
+        """
+        .......... predictive distribution of y conditional on theta, where
+        prior      , if model is not fitted on data
+        poesterior , if model is fitted on data
+
+        n_samples is number of samples for each of data points (y1, ..., yn)
+        if n_samples > 0, returns sampled (Xs, ys)
+        if n_samples = 0, returns analytical distribution
+        """
+        if not self.parametrised():
+            raise AttributeError('model not parametrised yet.')
+        if self.fitted():
+            check_X_update(self.X, X)
+            pass # print('generating posterior predictive...')
+        else:
+            pass # print('generating prior predictive...')
 
 
 class OnlineSupervisedMixin(SupervisedModel):
@@ -283,7 +346,7 @@ class OnlineSupervisedMixin(SupervisedModel):
     @abstractmethod
     def update(self, X: ndarray, y: ndarray):
         if not self.fitted():
-            raise ValueError('update after model is fitted first.')
+            raise AttributeError('update after model is fitted first.')
         check_X_y_update(X, y, self.X, self.y)
         self.X = np.vstack((self.X, X))
         self.y = np.append(self.y, y)

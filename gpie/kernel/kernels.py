@@ -145,9 +145,6 @@ class Sum(Kernel):
     def stationary(self) -> bool:
         return self.k1.stationary() and self.k2.stationary()
 
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
-
     def _set(self, log_params: ndarray):
         self.k1._set(log_params[:self.b])
         self.k2._set(log_params[self.b:])
@@ -206,9 +203,6 @@ class Product(Kernel):
     def stationary(self) -> bool:
         return self.k1.stationary() and self.k2.stationary()
 
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
-
     def _set(self, log_params: ndarray):
         self.k1._set(log_params[:self.b])
         self.k2._set(log_params[self.b:])
@@ -262,9 +256,6 @@ class Exponetiation(Kernel):
     def stationary(self) -> bool:
         return self.k.stationary()
 
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
-
     def _set(self, log_params: ndarray):
         self.k._set(log_params)
 
@@ -316,9 +307,6 @@ class KroneckerSum(Kernel):
     @property
     def hyperparameters(self):
         return self.k1.hyperparameters + self.k2.hyperparameters
-
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
 
     def _set(self, log_params: ndarray):
         self.k1._set(log_params[:self.b])
@@ -375,9 +363,6 @@ class KroneckerProduct(Kernel):
     @property
     def hyperparameters(self):
         return self.k1.hyperparameters + self.k2.hyperparameters
-
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
 
     def _set(self, log_params: ndarray):
         self.k1._set(log_params[:self.b])
@@ -476,9 +461,6 @@ class ConstantKernel(Kernel, StationaryMixin):
     def a(self):
         return exp(self.thetas.values[0])
 
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
-
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
@@ -522,9 +504,6 @@ class WhiteKernel(Kernel, StationaryMixin):
     @property
     def hyperparameters(self):
         return {}
-
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
 
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
@@ -587,9 +566,6 @@ class RBFKernel(Kernel, StationaryMixin):
             return exp(self.thetas.values)
         else:
             return np.exp(self.thetas.values)
-
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
 
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
@@ -712,9 +688,6 @@ class RationalQuadraticKernel(Kernel, StationaryMixin):
             return exp(self.thetas.values[1])
         else:
             return np.exp(self.thetas.values[1:])
-
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
 
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
@@ -852,9 +825,6 @@ class MaternKernel(Kernel, StationaryMixin):
         else:
             return np.exp(self.thetas.values)
 
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
-
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
@@ -983,9 +953,6 @@ class PeriodicKernel(Kernel, StationaryMixin):
             return exp(self.thetas.values[-1])
         else:
             return np.exp(self.thetas.values[-self.dim:])
-
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
 
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
@@ -1121,9 +1088,6 @@ class SpectralKernel(Kernel, StationaryMixin):
         else:
             return np.exp(self.thetas.values[-self.dim:])
 
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
-
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
@@ -1245,9 +1209,6 @@ class LinearKernel(Kernel, NonStationaryMixin):
         else:
             return np.exp(self.thetas.values)
 
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
-
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
@@ -1348,9 +1309,6 @@ class NeuralKernel(Kernel, NonStationaryMixin):
             return exp(self.thetas.values[1])
         else:
             return np.exp(self.thetas.values[1:])
-
-    def fitted(self) -> bool:
-        return self.thetas.assigned()
 
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)

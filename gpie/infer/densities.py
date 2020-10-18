@@ -6,42 +6,12 @@ from abc import ABC, abstractmethod
 from numpy import ndarray, newaxis
 from scipy.stats import multivariate_normal, uniform # type: ignore
 from typing import Callable
-
-
-class Density(ABC):
-
-    @abstractmethod
-    def __init__(self):
-        """ initialize density object """
-
-    @abstractmethod
-    def __call__(self, x):
-        """ evaluate density at x """
-
-    def _log_ratio(self, x_star, x):
-        """ q(x|x_star) / q(x_star|x) """
-        if self.symmetric():
-            return 0.
-        else:
-            raise NotImplementedError
-
-
-class NormalizedMixedin:
-    """ normalized density """
-
-    def normalized(self) -> bool:
-        return True
-
-
-class UnnormalizedMixedin:
-    """ unnormalized density """
-
-    def normalized(self) -> bool:
-        return False
+from ..base import Density, Distribution
 
 
 class SymmetricMixin:
     """ symmetric density """
+
     def symmetric(self) -> bool:
         return True
 
@@ -53,17 +23,18 @@ class AsymmetricMixin:
         return False
 
 
-class LogDensity(Density, UnnormalizedMixedin, AsymmetricMixin):
+class LogDensity(Density, AsymmetricMixin):
 
     def __init__(self, log_density: Callable):
         super().__init__()
         self.log_dst = log_density
 
     def __call__(self, x: ndarray):
+        super().__init__(x)
         return self.log_dst(x)
 
 
-class Gaussian(Density, NormalizedMixedin, SymmetricMixin):
+class Gaussian(Distribution, SymmetricMixin):
     """ multivariate Gaussian (normal) density """
 
     def __init__(self, mu: ndarray = np.zeros((1,)),
@@ -95,7 +66,7 @@ class Gaussian(Density, NormalizedMixedin, SymmetricMixin):
         return x_star, self._log_ratio(x_star, x)
 
 
-class Uniform(Density, NormalizedMixedin, SymmetricMixin):
+class Uniform(Distribution, SymmetricMixin):
     """ independent(!) multivariate uniform density """
 
     def __init__(self, a: ndarray = np.zeros((1,)),

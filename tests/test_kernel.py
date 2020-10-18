@@ -307,7 +307,7 @@ class KernelTestCase(unittest.TestCase):
             self.fail('gpr predict fails.')
         # distributive prediction
         try:
-            gpr.predict_prob(self.Z)
+            gpr.predictive(self.Z)
         except Exception:
             self.fail('gpr predict prob fails.')
 
