@@ -5,8 +5,8 @@ import numpy as np                                                # type: ignore
 import unittest
 from math import exp, log
 from gpie.base import Bounds
-from gpie.infer import GradientDescentOptimizer, \
-                       LogDensity, Gaussian, MatropolisHastingsSampler
+from gpie.infer import LogDensity, Gaussian, GradientDescentOptimizer, \
+                       MarkovChainMonteCarloSampler, SimulatedAnnealingSampler
 
 
 def beale(x1_x2) -> float:
@@ -36,20 +36,33 @@ class InferTestCase(unittest.TestCase):
             gdo.jac = False
             print(gdo.minimize())
         except Exception:
-            self.fail('gradient optimizer fails.')
+            self.fail('gradient descent optimizer fails.')
 
-    def test_metropolis(self):
+    def test_mcmc(self):
         try:
-            mhs1 = MatropolisHastingsSampler(LogDensity(log_p), Gaussian(),
-                                            np.zeros((1,)), n_restarts=0)
+            mhs1 = MarkovChainMonteCarloSampler(LogDensity(log_p), Gaussian(),
+                                                np.zeros((1,)), n_restarts=0)
             chain = mhs1.sample()
             print(chain)
-            mhs2 = MatropolisHastingsSampler(LogDensity(log_p), Gaussian(),
-                                            np.zeros((1,)), n_restarts=2)
+            mhs2 = MarkovChainMonteCarloSampler(LogDensity(log_p), Gaussian(),
+                                                np.zeros((1,)), n_restarts=2)
             chains = mhs2.sample()
             print(chains)
         except Exception:
-            self.fail('Metropolis sampler fails.')
+            self.fail('Metropolis Hastings sampler fails.')
+
+    def test_sa(self):
+        try:
+            sa1 = SimulatedAnnealingSampler(LogDensity(log_p), Gaussian(),
+                                            np.zeros((1,)), n_restarts=0)
+            chain = sa1.sample()
+            print(chain)
+            sa2 = SimulatedAnnealingSampler(LogDensity(log_p), Gaussian(),
+                                            np.zeros((1,)), n_restarts=2)
+            chains = sa2.sample()
+            print(chains)
+        except Exception:
+            self.fail('simulated annealing sampler fails.')
 
 
 if __name__ == '__main__':

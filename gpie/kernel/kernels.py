@@ -107,6 +107,10 @@ class Kernel(Model):
     def __rand__(self, other):
         return KroneckerProduct(other, self)
 
+    @abstractmethod
+    def stationary(self) -> bool:
+        """ kernel is stationary or not """
+
 
 class Sum(Kernel):
     """ elementwise sum of two kernels """
@@ -430,7 +434,7 @@ def check_positive_scalar_array(x: V, name='length scale'):
         raise TypeError('{} must be a float or an array.'.format(name))
 
 
-class ConstantKernel(Kernel, StationaryMixin):
+class ConstantKernel(StationaryMixin, Kernel):
     """
     constant kernel
 
@@ -480,7 +484,7 @@ class ConstantKernel(Kernel, StationaryMixin):
         return self.a * np.ones((X.shape[0], Z.shape[0]))
 
 
-class WhiteKernel(Kernel, StationaryMixin):
+class WhiteKernel(StationaryMixin, Kernel):
     """
     white noise kernel
 
@@ -524,7 +528,7 @@ class WhiteKernel(Kernel, StationaryMixin):
         return np.where(same, 1., 0.)
 
 
-class RBFKernel(Kernel, StationaryMixin):
+class RBFKernel(StationaryMixin, Kernel):
     """
     radial basis function kernel (a.k.a. exponential quadraric kernel)
 
@@ -628,7 +632,7 @@ class RBFKernel(Kernel, StationaryMixin):
         return K
 
 
-class RationalQuadraticKernel(Kernel, StationaryMixin):
+class RationalQuadraticKernel(StationaryMixin, Kernel):
 
     """
     rational quadratic kernel (scale mixture of RBF kernels)
@@ -750,7 +754,7 @@ class RationalQuadraticKernel(Kernel, StationaryMixin):
         return K
 
 
-class MaternKernel(Kernel, StationaryMixin):
+class MaternKernel(StationaryMixin, Kernel):
     """
     Matérn kernel (d = 1 -> Ornstein–Uhlenbeck kernel)
 
@@ -892,7 +896,7 @@ class MaternKernel(Kernel, StationaryMixin):
         return K
 
 
-class PeriodicKernel(Kernel, StationaryMixin):
+class PeriodicKernel(StationaryMixin, Kernel):
     """
     periodic kernel (RBF kernel in u-space)
 
@@ -1025,7 +1029,7 @@ class PeriodicKernel(Kernel, StationaryMixin):
 
 # FIXME: add CosineKernel, spectral kernel = RBFKernel * CosineKernel?
 
-class SpectralKernel(Kernel, StationaryMixin):
+class SpectralKernel(StationaryMixin, Kernel):
     """
     additive component of spectral mixture kernel
     whose spectral densitiy is Gaussian(p, l)
@@ -1166,7 +1170,7 @@ class SpectralKernel(Kernel, StationaryMixin):
         return K
 
 
-class LinearKernel(Kernel, NonStationaryMixin):
+class LinearKernel(NonStationaryMixin, Kernel):
     """
     linear kernel
 
@@ -1259,7 +1263,7 @@ class LinearKernel(Kernel, NonStationaryMixin):
         return K
 
 
-class NeuralKernel(Kernel, NonStationaryMixin):
+class NeuralKernel(NonStationaryMixin, Kernel):
     """
     neural kernel
 

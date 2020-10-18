@@ -307,9 +307,10 @@ class KernelTestCase(unittest.TestCase):
             self.fail('gpr predict fails.')
         # distributive prediction
         try:
-            gpr.predictive(self.Z)
+            gpr.posterior_predictive(self.Z)
+            gpr.posterior_predictive(self.Z)
         except Exception:
-            self.fail('gpr predict prob fails.')
+            self.fail('gpr predictive fails.')
 
     # def test_gpc(self):
     #     pass

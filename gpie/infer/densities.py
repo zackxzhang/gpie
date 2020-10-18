@@ -23,18 +23,18 @@ class AsymmetricMixin:
         return False
 
 
-class LogDensity(Density, AsymmetricMixin):
+class LogDensity(AsymmetricMixin, Density):
 
     def __init__(self, log_density: Callable):
         super().__init__()
         self.log_dst = log_density
 
     def __call__(self, x: ndarray):
-        super().__init__(x)
+        super().__call__(x)
         return self.log_dst(x)
 
 
-class Gaussian(Distribution, SymmetricMixin):
+class Gaussian(SymmetricMixin, Distribution):
     """ multivariate Gaussian (normal) density """
 
     def __init__(self, mu: ndarray = np.zeros((1,)),
@@ -66,7 +66,7 @@ class Gaussian(Distribution, SymmetricMixin):
         return x_star, self._log_ratio(x_star, x)
 
 
-class Uniform(Distribution, SymmetricMixin):
+class Uniform(SymmetricMixin, Distribution):
     """ independent(!) multivariate uniform density """
 
     def __init__(self, a: ndarray = np.zeros((1,)),

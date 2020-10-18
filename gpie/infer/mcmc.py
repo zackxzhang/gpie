@@ -2,23 +2,18 @@
 # markov chain monte carlo
 
 import numpy as np                                                # type: ignore
+from abc import ABC, abstractmethod
 from multiprocessing import Pool
 from numpy import ndarray
+from typing import Callable, Optional, Sequence, Tuple, Type, Union, Iterable
 from ..base import Sampler
 from .densities import Density
 
 
-class MCMCSampler(Sampler):
-
-    def __init__(self):
-        super().__init__()
-
-
-class MatropolisHastingsSampler(MCMCSampler):
+class MarkovChainSampler(Sampler):
 
     def __init__(self, log_p: Density, q: Density, x0: ndarray,
-                 n_samples: int = 10000, n_burns: int = 2000,
-                 n_restarts: int = 0):
+                 n_samples: int, n_burns: int, n_restarts: int):
         super().__init__()
         self.log_p = log_p
         self.q = q
@@ -102,7 +97,28 @@ class MatropolisHastingsSampler(MCMCSampler):
         self.X0 = np.vstack([self.X0, X])
         return True
 
+    @abstractmethod
     def _sample(self, x0):
+        """ sample from one chain """
+
+    def sample(self, n_jobs: int = 4, verbose: bool = False):
+        """ sample from multiple chains """
+        if self._restart():
+            with Pool(n_jobs) as pool:
+                chains = pool.map(self._sample, self.X0)
+            return chains
+        else:
+            return self._sample(self.X0[0])
+
+
+class MarkovChainMonteCarloSampler(MarkovChainSampler):
+
+    def __init__(self, log_p: Density, q: Density, x0: ndarray,
+                 n_samples: int = 10000, n_burns: int = 2000,
+                 n_restarts: int = 0):
+        super().__init__(log_p, q, x0, n_samples, n_burns, n_restarts)
+
+    def _sample(self, x0: ndarray):
         # intiailize
         x = x0
         log_u = np.log(np.random.uniform(0, 1, size=(self.n_samples,)))
@@ -117,28 +133,45 @@ class MatropolisHastingsSampler(MCMCSampler):
                 chain[i] = x
         return chain
 
-    def sample(self, n_jobs: int = 4, verbose: bool = False):
-        if self._restart():
-            with Pool(n_jobs) as pool:
-                chains = pool.map(self._sample, self.X0)
-            return chains
-        else:
-            return self._sample(self.X0[0])
+
+class SimulatedAnnealingSampler(MarkovChainSampler):
+
+    def __init__(self, log_p: Density, q: Density, x0: ndarray,
+                 n_samples: int = 10000, n_burns: int = 2000,
+                 n_restarts: int = 0, cooling: Optional[ndarray] = None):
+        super().__init__(log_p, q, x0, n_samples, n_burns, n_restarts)
+        # linear cooling schedule
+        self.cooling = np.linspace(1., 0.1, self.n_burns+self.n_samples)
+
+    def _sample(self, x0: ndarray):
+        # intiailize
+        x = x0
+        log_u = np.log(np.random.uniform(0, 1, size=(self.n_samples,)))
+        chain = np.zeros((self.n_samples, len(x)))
+        # simulated annealing
+        for i in range(-self.n_burns, self.n_samples):
+            x_star, accept = self.q.propose(x)
+            accept += self.cooling[i] * (self.log_p(x_star) - self.log_p(x))
+            if log_u[i] < accept: # accept
+                x = x_star
+            if i >= 0:
+                chain[i] = x
+        return chain
 
 
-class HamiltonianMCSampler(MCMCSampler):
+class ThermodynamicSASampler(SimulatedAnnealingSampler):
 
     def __init__(self):
         super().__init__()
 
 
-class NoUTurnSampler(HamiltonianMCSampler):
+class HamiltonianMCSampler(MarkovChainMonteCarloSampler):
 
     def __init__(self):
         super().__init__()
 
 
-class SimulatedAnnealingSampler(MCMCSampler):
+class NoUTurnHMCSampler(HamiltonianMCSampler):
 
     def __init__(self):
         super().__init__()

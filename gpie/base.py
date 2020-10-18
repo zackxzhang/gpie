@@ -307,27 +307,25 @@ class BayesianSupervisedModel(SupervisedModel):
 
 
     @abstractmethod
-    def p_hyper(self):
-        """
-        .......... distribution of thetas
-        prior      , if model is not fitted on data
-        poesterior , if model is fitted on data
-        """
+    def hyper_prior(self):
+        """ prior distribution p(θ) """
         # FIXME: check if thetas has prior distributions or just a point value
-        if not self.parametrised():
-            raise AttributeError('model not parametrised yet.')
+        # point value implement a density class called Dirac?
         if self.fitted():
-            pass # print('generating hyper posterior...')
-        else:
-            pass # print('generating hyper prior...')
+            raise AttributeError('model already fitted. please refer to model '
+                                 'init stage when hyper prior is set by user.' )
 
     @abstractmethod
-    def predictive(self, X: ndarray, n_samples: int = 0):
-        """
-        .......... predictive distribution of y conditional on theta, where
-        prior      , if model is not fitted on data
-        poesterior , if model is fitted on data
+    def hyper_posterior(self):
+        """ posterior distribution p(θ|Xo,yo) """
+        if not self.fitted():
+            raise AttributeError('model not fitted yet.')
+        # compute hyper posterior
 
+    @abstractmethod
+    def prior_predictive(self, X: ndarray, n_samples: int = 0):
+        """
+        prior distribution p(y|X,θ)
         n_samples is number of samples for each of data points (y1, ..., yn)
         if n_samples > 0, returns sampled (Xs, ys)
         if n_samples = 0, returns analytical distribution
@@ -336,9 +334,23 @@ class BayesianSupervisedModel(SupervisedModel):
             raise AttributeError('model not parametrised yet.')
         if self.fitted():
             check_X_update(self.X, X)
-            pass # print('generating posterior predictive...')
+        # compute prior predictive
+
+    @abstractmethod
+    def posterior_predictive(self, X: ndarray, n_samples: int = 0):
+        """
+        posterior distribution p(y|X,Xo,yo,θ)
+        n_samples is number of samples for each of data points (y1, ..., yn)
+        if n_samples > 0, returns sampled (Xs, ys)
+        if n_samples = 0, returns analytical distribution
+        """
+        if not self.parametrised():
+            raise AttributeError('model not parametrised yet.')
+        if self.fitted():
+            check_X_update(self.X, X)
         else:
-            pass # print('generating prior predictive...')
+            raise AttributeError('model not fitted yet.')
+        # compute posterior predictive
 
 
 class OnlineSupervisedMixin(SupervisedModel):
