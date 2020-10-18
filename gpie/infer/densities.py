@@ -101,8 +101,7 @@ class Gaussian(SymmetricMixin, Distribution):
 class Uniform(SymmetricMixin, Distribution):
     """ independent(!) multivariate uniform density """
 
-    def __init__(self, a: ndarray = np.zeros((1,)),
-                b: ndarray = np.ones((1,))):
+    def __init__(self, a: ndarray = np.zeros(1), b: ndarray = np.ones(1)):
         super().__init__()
         self.parametrise(a=a, b=b)
 
