@@ -34,26 +34,58 @@ class LogDensity(AsymmetricMixin, Density):
         return self.log_dst(x)
 
 
+class Dirac(SymmetricMixin, Distribution):
+    """ Dirac distribution / delta function / point mass """
+
+    def __init__(self, mu: ndarray = np.zeros((1,))):
+        super().__init__()
+        self.mu = mu
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'Dirac(mu={})'.format(self.mu)
+
+    def pdf(self, x: ndarray):
+        return 1. if np.allclose(x, self.mu) else 0.
+
+    def __call__(self, x: ndarray):
+        return self.pdf(x)
+
+    def sample(self, size: int = 1):
+        return np.squeeze(np.tile(self.mu, (size, 1)))
+
+
 class Gaussian(SymmetricMixin, Distribution):
     """ multivariate Gaussian (normal) density """
 
-    def __init__(self, mu: ndarray = np.zeros((1,)),
-                 cov: ndarray = np.ones((1,))):
+    def __init__(self, mu: ndarray = np.zeros(1),
+                 cov: ndarray = np.eye(1), **kwargs):
         super().__init__()
-        self.parametrise(mu=mu, cov=cov)
+        self.parametrise(mu=mu, cov=cov, **kwargs)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'Gaussian(mu={}, cov={})'.format(self.mu, self.cov)
 
     def parametrise(self, **kwargs):
         if 'mu' in kwargs:
-            self.mu = kwargs['mu']
+            self.mu = kwargs.pop('mu')
         if 'cov' in kwargs:
-            self.cov = kwargs['cov']
-        self.dst = multivariate_normal(self.mu, self.cov)
+            self.cov = kwargs.pop('cov')
+        self.dst = multivariate_normal(self.mu, self.cov, **kwargs)
 
-    def __call__(self, x: ndarray, log: bool = False):
-        if log:
-            return self.dst.logpdf(x)
-        else:
-            return self.dst.pdf(x)
+    def pdf(self, x: ndarray):
+        return self.dst.pdf(x)
+
+    def logpdf(self, x: ndarray):
+        return self.dst.logpdf(x)
+
+    def __call__(self, x: ndarray):
+        return self.pdf(x)
 
     def sample(self, size: int = 1):
         return self.dst.rvs(size=size)
@@ -74,6 +106,12 @@ class Uniform(SymmetricMixin, Distribution):
         super().__init__()
         self.parametrise(a=a, b=b)
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'Uniform(a={}, b={})'.format(self.a, self.b)
+
     def parametrise(self, **kwargs):
         if 'a' in kwargs:
             self.a = kwargs['a']
@@ -83,17 +121,20 @@ class Uniform(SymmetricMixin, Distribution):
         for l, s in zip(self.a, self.b):
             self.dst.append(uniform(l, s))
 
-    def __call__(self, x: ndarray, log: bool = False):
-        if log:
-            log_pdf = 0.
-            for xx, dd in zip(x, self.dst):
-                log_pdf += dd.logpdf(xx)
-            return log_pdf
-        else:
-            pdf = 1.
-            for xx, dd in zip(x, self.dst):
-                pdf *= dd.pdf(xx)
-            return pdf
+    def pdf(self, x: ndarray):
+        pdf = 1.
+        for xx, dd in zip(x, self.dst):
+            pdf *= dd.pdf(xx)
+        return pdf
+
+    def logpdf(self, x: ndarray):
+        log_pdf = 0.
+        for xx, dd in zip(x, self.dst):
+            log_pdf += dd.logpdf(xx)
+        return log_pdf
+
+    def __call__(self, x: ndarray):
+        return self.pdf(x)
 
     def sample(self, size: int = 1):
         return np.hstack([dd.rvs(size)[:, newaxis] for dd in self.dst])

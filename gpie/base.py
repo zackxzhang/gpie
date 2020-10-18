@@ -307,17 +307,26 @@ class BayesianSupervisedModel(SupervisedModel):
 
 
     @abstractmethod
-    def hyper_prior(self):
-        """ prior distribution p(θ) """
+    def hyper_prior(self, n_samples: int = 0):
+        """
+        prior distribution p(θ)
+        if n_samples > 0, returns #n_samples θ's (vertically stacked)
+        if n_samples = 0, returns a distribution object
+        """
         # FIXME: check if thetas has prior distributions or just a point value
-        # point value implement a density class called Dirac?
+        # implement UninformedPrior class that always returns 1 as density
         if self.fitted():
             raise AttributeError('model already fitted. please refer to model '
                                  'init stage when hyper prior is set by user.' )
+        # compute hyper prior
 
     @abstractmethod
-    def hyper_posterior(self):
-        """ posterior distribution p(θ|Xo,yo) """
+    def hyper_posterior(self, n_samples: int = 0):
+        """
+        posterior distribution p(θ|Xo,yo)
+        if n_samples > 0, returns #n_samples θ's (vertically stacked)
+        if n_samples = 0, returns a distribution object
+        """
         if not self.fitted():
             raise AttributeError('model not fitted yet.')
         # compute hyper posterior
@@ -326,9 +335,8 @@ class BayesianSupervisedModel(SupervisedModel):
     def prior_predictive(self, X: ndarray, n_samples: int = 0):
         """
         prior distribution p(y|X,θ)
-        n_samples is number of samples for each of data points (y1, ..., yn)
-        if n_samples > 0, returns sampled (Xs, ys)
-        if n_samples = 0, returns analytical distribution
+        if n_samples > 0, returns #n_samples y's (vertically stacked)
+        if n_samples = 0, returns a distribution object
         """
         if not self.parametrised():
             raise AttributeError('model not parametrised yet.')
@@ -340,9 +348,8 @@ class BayesianSupervisedModel(SupervisedModel):
     def posterior_predictive(self, X: ndarray, n_samples: int = 0):
         """
         posterior distribution p(y|X,Xo,yo,θ)
-        n_samples is number of samples for each of data points (y1, ..., yn)
-        if n_samples > 0, returns sampled (Xs, ys)
-        if n_samples = 0, returns analytical distribution
+        if n_samples > 0, returns #n_samples y's (vertically stacked)
+        if n_samples = 0, returns a distribution object
         """
         if not self.parametrised():
             raise AttributeError('model not parametrised yet.')

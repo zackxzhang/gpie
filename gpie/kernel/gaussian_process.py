@@ -3,13 +3,15 @@
 
 import numpy as np                                                # type: ignore
 import warnings
+from functools import partial
 from math import pi, exp, log, sqrt
 from numpy import ndarray
 from scipy.linalg import cho_solve, cholesky                      # type: ignore
 from scipy.stats import norm                                      # type: ignore
 from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
-from ..base import BayesianSupervisedModel, Thetas
-from ..infer import GradientDescentOptimizer
+from ..base import BayesianSupervisedModel, Thetas, Density
+from ..infer import Dirac, Gaussian, LogDensity, \
+    GradientDescentOptimizer, MarkovChainMonteCarloSampler
 from ..util import audit_X_Z, audit_X_y, audit_X_y_update, is_array
 from .kernels import Kernel, RBFKernel, WhiteKernel
 
@@ -87,7 +89,8 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         kfun = self.kernel._obj(X)
         # log marginal likelihood and its gradient w.r.t. log params
         # ref. GPML algorithm 2.1, equation 5.9
-        def fun(kparams: ndarray) -> Tuple[float, ndarray]:
+        def fun(kparams: ndarray, grad: bool = True) \
+            -> Union[Tuple[float, ndarray], float]:
             assert is_array(kparams, 1, np.number)
             K, dK = kfun(kparams)
             K[np.diag_indices_from(K)] += 1e-8  # jitter
@@ -98,11 +101,15 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             log_mll = -.5 * n * log(2. * pi)
             log_mll -= .5 * (Y.T @ invK_y).item()
             log_mll -= np.log(np.diag(L)).sum()
-            # gradient w.r.t. kernel log parameters
-            invK = cho_solve((L, True), I)
-            S = invK_y @ invK_y.T - invK
-            grad = np.einsum('ij,ijk->k', S, dK) * .5
-            return -log_mll, -np.array(grad)
+            if grad:
+                # gradient w.r.t. kernel log parameters
+                invK = cho_solve((L, True), I)
+                S = invK_y @ invK_y.T - invK
+                grad = np.einsum('ij,ijk->k', S, dK) * .5
+                return -log_mll, -np.array(grad)
+                # FIXME: flip it back, implement maximize method in optimizer
+            else:
+                return log_mll
         return fun
 
     def _acq(self, acquisition: str) -> Callable:
@@ -112,15 +119,15 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         def fun_pi(x: ndarray, xi=.01) -> float:
             assert is_array(x, 1, np.number)
             assert isinstance(xi, float) and xi > 0.
-            mu, var = self.posterior_predictive(x[np.newaxis, :])
-            mu, sigma = mu.item(), sqrt(var.item())
+            p = self.posterior_predictive(x[np.newaxis, :])
+            mu, sigma = p.mu.item(), sqrt(p.cov.item())
             y_min = self.y.min()
             return norm.cdf(y_min, mu + xi, sigma)
         # expected improvement
         def fun_ei(x: ndarray) -> float:
             assert is_array(x, 1, np.number)
-            mu, var = self.posterior_predictive(x[np.newaxis, :])
-            mu, sigma = mu.item(), sqrt(var.item())
+            p = self.posterior_predictive(x[np.newaxis, :])
+            mu, sigma = p.mu.item(), sqrt(p.cov.item())
             y_min = self.y.min()
             return (y_min - mu) * norm.cdf(y_min, mu, sigma) + \
                    sigma**2 * norm.pdf(y_min, mu, sigma)
@@ -128,8 +135,8 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         def fun_lcb(x: ndarray, beta: float = 1.) -> float:
             assert is_array(x, 1, np.number)
             assert isinstance(beta, float) and beta > 0.
-            mu, var = self.posterior_predictive(x[np.newaxis, :])
-            mu, sigma = mu.item(), sqrt(var.item())
+            p = self.posterior_predictive(x[np.newaxis, :])
+            mu, sigma = p.mu.item(), sqrt(p.cov.item())
             return mu - beta * sigma
         # entropy search
         def fun_es():
@@ -156,10 +163,25 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             self.optimizer.n_restarts = n_restarts
 
     def hyper_prior(self, n_samples: int = 0):
-        raise NotImplementedError
+        super().hyper_prior(n_samples)
+        if n_samples <= 0:
+            return Dirac(self.thetas.values)
+        else:
+            return Dirac(self.thetas.values).sample(n_samples)
+        # only support dirac distributed θ for now
 
-    def hyper_posterior(self, n_samples: int = 5000):
-        raise NotImplementedError
+    def hyper_posterior(self, n_samples: int = 0):
+        super().hyper_posterior(n_samples)
+        hyper_posterior = LogDensity(partial(self._obj(self.X, self.y),
+                                             grad=False)               )
+        if n_samples <= 0:
+            return hyper_posterior
+        else:
+            k = len(self.thetas)
+            sampler = MarkovChainMonteCarloSampler(hyper_posterior,
+                          Gaussian(np.zeros(k), np.eye(k)), self.thetas.values)
+            return sampler.sample(n_samples)
+        # only support dirac distributed θ for now
 
     def fit(self, X: ndarray, y: ndarray, verbose: bool = False):
         """ MAP estimatem under uniform prior """
@@ -167,6 +189,10 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         self.optimizer.fun = self._obj(self.X, self.y)
         self.optimizer.jac = True
         success, loss, kparams = self.optimizer.minimize(verbose)
+         # wipe out optimizer state, otherwise gpr object cannot be pickled
+         # because closure of fun
+        self.optimizer.fun = None
+        self.optimizer.jac = None
         if not success:
             warnings.warn( 'optimzation fails. try changing x0 or bounds, '
                            'or increasing number of restarts.' )
@@ -179,24 +205,27 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         self.dual_weights = cho_solve((self.L, True), self.y)
         return self
 
-    def predict(self, X: ndarray):
+    def predict(self, X: ndarray) -> ndarray:
         super().predict(X)
         Kzx = self.kernel(X, self.X)
         mu = np.einsum('ij,j->i', Kzx, self.dual_weights)
         return mu
 
-    def prior_predictive(self, X: ndarray, n_samples: int = 0):
+    def prior_predictive(self, X: ndarray, n_samples: int = 0) \
+        -> Union[Gaussian, ndarray]:
         super().prior_predictive(X, n_samples)
-        if n_samples > 0:
-            raise NotImplementedError  # predictive sampling coming soon
         mu = np.zeros(len(X))
         cov = self.kernel(X, X)
-        return mu, cov  # FIXME: change to return a Gaussian object
+        prior = Gaussian(mu, cov)
+        if n_samples <= 0:
+            return prior
+        else:
+            return prior.sample(n_samples)
+        # only support dirac distributed θ for now
 
-    def posterior_predictive(self, X: ndarray, n_samples: int = 0):
+    def posterior_predictive(self, X: ndarray, n_samples: int = 0) \
+        -> Union[Gaussian, ndarray]:
         super().posterior_predictive(X, n_samples)
-        if n_samples > 0:
-            raise NotImplementedError  # predictive sampling coming soon
         Kzx = self.kernel(X, self.X)
         Kzz = self.kernel(X, X)
         mu = np.einsum('ij,j->i', Kzx, self.dual_weights)
@@ -205,40 +234,15 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             warnings.warn('posterior covariance matrix has negative elements. '
                           'possibly numerical issues. correcting to 0.')
         cov[cov < 0.] = 0.
-        return mu, cov  # FIXME: change to return a Gaussian object
+        posterior = Gaussian(mu, cov, allow_singular=True)
+        if n_samples <= 0:
+            return posterior
+        else:
+            return posterior.sample(n_samples)
+        # only support dirac distributed θ for now
 
 
 class tProcessRegressor(BayesianSupervisedModel):
 
-    def __init__(self):
-        pass
-
-    def _unpack_params(self, p: ndarray):
-        pass
-
-    def _obj(self):
-        pass
-
-    def n_params(self):
-        pass
-
-    def set_params(self):
-        pass
-
-    def fitted(self):
-        pass
-
-    def fit(self):
-        pass
-
-    def predict(self):
-        pass
-
-    def update(self):
-        pass
-
-    def prior(self):
-        pass
-
-    def posterior(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError

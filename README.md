@@ -56,7 +56,7 @@ This is a ongoing research project with many parts currently **under constructio
         - Metropolis-Hastings
         - *Hamiltonian*
         - *no-U-turn*
-    - *simulated annealing*
+    - simulated annealing
 - *variational inference*
 
 Note: parts of the project *in italic font* are under construction.

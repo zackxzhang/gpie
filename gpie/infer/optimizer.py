@@ -43,7 +43,7 @@ class GradientDescentOptimizer(Optimizer):
         return self.__str__()
 
     def __str__(self):
-        return str({'bounds': bounds, 'x0': self.X0})
+        return str({'bounds': self.bounds, 'x0': self.X0})
 
     @property
     def backend(self):
@@ -156,6 +156,41 @@ class GradientDescentOptimizer(Optimizer):
             return False, self.fun(self.bounds.lowers), self.bounds.lowers
         # FIXME: parallelize
         minimize = lambda x0: self.min(fun=self.fun, jac=self.jac, x0=x0,
+                                       bounds=self.bounds.get(self.backend))
+        results = [minimize(x0) for x0 in self.X0]
+
+        if verbose:
+            print(results)
+
+        b = np.array([res['success'] for res in results])
+        X = np.vstack([res['x'] for res in results])
+        y = np.array([res['fun'] for res in results])
+
+        if np.any(b):
+            if verbose:
+                raise NotImplementedError
+                # return best trajectory
+            else:
+                return True, y[b].min(), X[b][y[b].argmin()]
+        else:
+            if verbose:
+                raise NotImplementedError
+                # return all trajectory
+            else:
+                return False, y.min(), X[y.argmin()]
+
+    def maximize(self, verbose: bool = False) -> Tuple[bool, float, ndarray]:
+        raise NotImplementedError
+        assert isinstance(verbose, bool)
+        self._check()  # other attribute must be set by now
+        self._restart()
+
+        if self.bounds.clamped():
+            warnings.warn( 'no optimization performed '
+                           'since parameters are fixed.' )
+            return False, self.fun(self.bounds.lowers), self.bounds.lowers
+        # FIXME: parallelize
+        minimize = lambda x0: self.min(fun=-self.fun, jac=self.jac, x0=x0,
                                        bounds=self.bounds.get(self.backend))
         results = [minimize(x0) for x0 in self.X0]
 

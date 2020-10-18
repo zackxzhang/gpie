@@ -138,10 +138,12 @@ class SimulatedAnnealingSampler(MarkovChainSampler):
 
     def __init__(self, log_p: Density, q: Density, x0: ndarray,
                  n_samples: int = 10000, n_burns: int = 2000,
-                 n_restarts: int = 0, cooling: Optional[ndarray] = None):
+                 n_restarts: int = 0, cooling: Union[str, ndarray] = 'linear'):
         super().__init__(log_p, q, x0, n_samples, n_burns, n_restarts)
-        # linear cooling schedule
-        self.cooling = np.linspace(1., 0.1, self.n_burns+self.n_samples)
+        if cooling == 'linear':
+            self.cooling = np.linspace(1., 0.1, self.n_burns+self.n_samples)
+        else:
+            raise NotImplementedError
 
     def _sample(self, x0: ndarray):
         # intiailize
