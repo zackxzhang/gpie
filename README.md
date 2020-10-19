@@ -19,8 +19,9 @@ This is a ongoing research project with many parts currently **under constructio
 - several "avant-garde" kernels such as spectral kernel and neural kernel allow for exploration of new ideas
 - each kernel implements anisotropic variant besides isotropic one to support automatic relevance determination
 - a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", for example, handcrafting composite kernels based on expert knowledge or exploiting special structure of datasets
-- core computations such as likelihood and analytical gradient are carefully formulated for speed and robustness
-- Bayesian optimizer offers a powerful strategy in optimizing expensive-to-evaluate, black-box objectives
+- core computations such as likelihood and gradient are carefully formulated for speed and stability
+- sampling inference embraces a probabilistic perspective in learning and prediction to promote robustness
+- Bayesian optimizer offers a principled strategy in optimizing expensive-to-evaluate, black-box objectives
 
 
 ### Functionality
@@ -54,8 +55,7 @@ This is a ongoing research project with many parts currently **under constructio
 - sampling inference
     - Markov chain Monte Carlo
         - Metropolis-Hastings
-        - *Hamiltonian*
-        - *no-U-turn*
+        - *Hamiltonian + no-U-turn*
     - simulated annealing
 - *variational inference*
 
@@ -84,17 +84,37 @@ gpr = GaussianProcessRegressor(kernel=kernel)
 gpr.fit(X, y)
 ```
 ![alt text](./examples/mauna-loa-co2.png)
-In the plot, scattered dots represent historical observations, and shaded area shows the prediction interval made by a Gaussian process regressor trained on historical data.
+In the plot, scattered dots represent historical observations, and shaded area shows the predictive interval (μ - σ, μ + σ) prophesied by a Gaussian process regressor trained on the historical data.
+
+##### Sampling inference for Gaussian process regression
+
+In this example, we use a synthesized dataset for ease of illustration and investigate sampling inference techniques such as Markov chain Monte Carlo. As a Gaussian process defines the predictive distribution, we can get a sense of it by sampling from its prior distribution (before seeing training set) and posterior distribution (after seeing training set).
+```python
+# with the current hyperparameter configuration,
+# ... what is the prior distribution p(y_test)
+y_prior = gpr.prior_predictive(X, n_samples=6)
+# ... what is the posterior distribution p(y_test|y_train)
+y_posterior = gpr.posterior_predictive(X, n_samples=4)
+```
+![alt text](./examples/prior-predictive.png)
+![alt text](./examples/posterior-predictive.png)
+
+We can also sample from the posterior distribution of a hyperparameter, which characterizes its uncertainty beyond a single point estimate such as MLE or MAP.
+```python
+# invoke MCMC sampler to sample hyper values from its posterior distribution
+hyper_posterior = gpr.hyper_posterior(n_samples=10000)
+```
+![alt text](./examples/posterior-a2.png)
 
 
 ### Installation
 
-The easiest way to install GPie is from a prebuilt wheel using pip:
+GPie requires Python 3.6 or greater. The easiest way to install GPie is from a prebuilt wheel using pip:
 ```bash
 pip install --upgrade gpie
 ```
 
-You can also install from source to try out the latest features (`pep517>=0.8.0` and `setuptools>=40.9.0` are needed):
+You can also install from source to try out the latest features (requires `pep517>=0.8.0` and `setuptools>=40.9.0`):
 ```bash
 pip install --upgrade git+https://github.com/zackxzhang/gpie
 ```
@@ -103,4 +123,4 @@ pip install --upgrade git+https://github.com/zackxzhang/gpie
 ### Backend
 
 - numpy: linear algebra, stochastic sampling
-- scipy: optimization, stochastic sampling
+- scipy: gradient-based optimization, stochastic sampling
