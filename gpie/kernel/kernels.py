@@ -32,7 +32,7 @@ class Kernel(Model):
 
     @property
     @abstractmethod
-    def thetas(self):
+    def thetas(self) -> Thetas:
         """
         learnable hyperparameters and their bounds
         used for model internals
@@ -40,7 +40,7 @@ class Kernel(Model):
 
     @property
     @abstractmethod
-    def hyperparameters(self):
+    def hyperparameters(self) -> Hypers:
         """
         fixed and learnable hyperparameters (view of thetas)
         used for printing model specifications
@@ -127,23 +127,23 @@ class Sum(Kernel):
         return '{k1} + {k2}'.format(k1=self.k1, k2=self.k2)
 
     @property
-    def k1(self):
+    def k1(self) -> Kernel:
         return self._k1
 
     @property
-    def k2(self):
+    def k2(self) -> Kernel:
         return self._k2
 
     @property
-    def b(self):
+    def b(self) -> int:
         return self._b
 
     @property
-    def thetas(self):
+    def thetas(self) -> Thetas:
         return self.k1.thetas + self.k2.thetas
 
     @property
-    def hyperparameters(self):
+    def hyperparameters(self) -> Hypers:
         return self.k1.hyperparameters + self.k2.hyperparameters
 
     def stationary(self) -> bool:
@@ -153,7 +153,7 @@ class Sum(Kernel):
         self.k1._set(log_params[:self.b])
         self.k2._set(log_params[self.b:])
 
-    def _obj(self, X: ndarray):
+    def _obj(self, X: ndarray) -> Callable:
         super()._obj(X)
         f1 = self.k1._obj(X)
         f2 = self.k2._obj(X)

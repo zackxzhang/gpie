@@ -10,7 +10,7 @@ from typing import Callable, Optional, Sequence, Tuple, Type, Union, Iterable
 from .util import check_X_update, check_X_y, check_X_y_update, \
                   is_array, map_array, concat_values, concat_bounds, V, B
 
-
+# optimizer backends
 OPT_BACKENDS = ('scipy')
 
 
@@ -82,20 +82,27 @@ class Bounds:
                        np.concatenate([other.uppers, self.uppers]) )
 
     @property
-    def lowers(self):
+    def lowers(self) -> ndarray:
+        """ lower bound """
         return self._lowers
 
     @property
-    def uppers(self):
+    def uppers(self) -> ndarray:
+        """ upper bound """
         return self._uppers
 
     def contains(self, values: ndarray) -> bool:
+        """ returns true if values are bounded within [lower, upper] """
         if values.shape != self.lowers.shape:
             raise ValueError('dimension of values must agree with bounds.')
         return np.all(self.lowers - 1e-8 <= values) and \
                np.all(self.uppers + 1e-8 >= values)
 
-    def clamped(self) -> bool:  # FIXME: use fixed or not to replace it
+    def clamped(self) -> bool:
+        """
+        whether bounds squeeze
+        .. todo:: replace it withfixed or not flag for each individual value
+        """
         if np.allclose(self.lowers, self.uppers):
             return True
         else:
@@ -151,18 +158,22 @@ class Thetas:
     @classmethod
     def from_seq(cls, values: Sequence[V], bounds: Sequence[B],
                  transform: Callable = lambda x: x):
+        """ a convenience method to construct thetas with sequence of values """
         return Thetas(values=map_array(transform, concat_values(*values)),
                       bounds=Bounds.from_seq(bounds, transform=transform))
 
     @property
-    def values(self):
+    def values(self) -> ndarray:
+        """ values """
         return self._values
 
     @property
-    def bounds(self):
+    def bounds(self) -> Bounds:
+        """ bounds """
         return self._bounds
 
     def set(self, values: ndarray):
+        """ set values and check whether bounds are violated """
         if not is_array(values, 1, np.number):
             raise TypeError('values must be 1d numeric array.')
         if not self.bounds.contains(values):
@@ -176,13 +187,16 @@ class Thetas:
         """
         parameters are assigned with values/distribution or not
         special case: zero-size theta returns True
+        .. todo:: returns True if thetas has None as values but has prior dst
         """
-        # FIXME: returns True if thetas has None as values but has prior dst
         return np.all(np.isfinite(self.values))
 
 
 class Hypers:
-    """ a view of learnable and fixed parameters """
+    """
+    a view of learnable and fixed parameters
+    .. todo:: potentially no longer useful
+    """
 
     def __init__(self, names: ndarray, values: ndarray):
         if isinstance(names, (tuple, list)):
@@ -235,7 +249,7 @@ class Model(ABC):
 
     @property
     @abstractmethod
-    def thetas(self):
+    def thetas(self) -> Thetas:
         """ core parametrisation of the model """
 
     def parametrised(self) -> bool:
@@ -261,7 +275,7 @@ class UnsupervisedModel(Model):
         self.X = X
 
     @abstractmethod
-    def transform(self, X: ndarray):
+    def transform(self, X: ndarray) -> ndarray:
         if not self.fitted():
             raise AttributeError('model is not fitted yet.')
         check_X_update(self.X, X)
@@ -288,7 +302,7 @@ class SupervisedModel(Model):
         self.y =y
 
     @abstractmethod
-    def predict(self, X: ndarray):
+    def predict(self, X: ndarray) -> ndarray:
         if not self.parametrised():
             raise AttributeError('model not parametrised yet.')
         if self.fitted():

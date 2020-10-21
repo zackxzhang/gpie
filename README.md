@@ -107,6 +107,14 @@ hyper_posterior = gpr.hyper_posterior(n_samples=10000)
 ![alt text](./examples/posterior-a2.png)
 
 
+### Backend
+
+GPie makes extensive use of de facto standard scientific computing packages in Python:
+
+- numpy: linear algebra, stochastic sampling  
+- scipy: gradient-based optimization, stochastic sampling
+
+
 ### Installation
 
 GPie requires Python 3.6 or greater. The easiest way to install GPie is from a prebuilt wheel using pip:
@@ -120,7 +128,8 @@ pip install --upgrade git+https://github.com/zackxzhang/gpie
 ```
 
 
-### Backend
-
-- numpy: linear algebra, stochastic sampling
-- scipy: gradient-based optimization, stochastic sampling
+### Coming Soon
+- example of Bayesian optimization
+- Sphinx-generated documentation
+- a brief guide on kernel composition
+- ...
