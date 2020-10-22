@@ -21,7 +21,7 @@ This is a ongoing research project with many parts currently **under constructio
 - a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", for example, handcrafting composite kernels based on expert knowledge or exploiting special structure of datasets
 - core computations such as likelihood and gradient are carefully formulated for speed and stability
 - sampling inference embraces a probabilistic perspective in learning and prediction to promote robustness
-- Bayesian optimizer offers a principled strategy in optimizing expensive-to-evaluate, black-box objectives
+- Bayesian optimizer offers a principled strategy to optimize expensive and black-box objectives globally
 
 
 ### Functionality
@@ -51,7 +51,7 @@ This is a ongoing research project with many parts currently **under constructio
     - *classification*
 - Bayesian optimizer
     - surrogate: Gaussian process, *t process*
-    - acquisition: PI, EI, LCB
+    - acquisition: PI, EI, LCB, *ES*, *KG*
 - sampling inference
     - Markov chain Monte Carlo
         - Metropolis-Hastings
@@ -129,7 +129,8 @@ pip install --upgrade git+https://github.com/zackxzhang/gpie
 
 
 ### Coming Soon
-- example of Bayesian optimization
+- an example of Bayesian optimization
+- a brief guide on kernel characteristics and how to compose them
+- a demo of quantified Occam's razor encoded by Bayesian inference and its implication for model selection
 - Sphinx-generated documentation
-- a brief guide on kernel composition
 - ...

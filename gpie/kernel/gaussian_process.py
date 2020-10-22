@@ -181,8 +181,8 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             k = len(self.thetas)
             sampler = MarkovChainMonteCarloSampler(hyper_posterior,
                           Gaussian(np.zeros(k), np.eye(k)),
-                          self.thetas.values, **kwargs)
-            return sampler.sample(n_samples)
+                          self.thetas.values, n_samples, **kwargs)
+            return sampler.sample()
         # only support uninformative prior θ for now
 
     def fit(self, X: ndarray, y: ndarray, verbose: bool = False):

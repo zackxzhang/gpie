@@ -11,6 +11,7 @@ from .densities import Density
 
 
 class MarkovChainSampler(Sampler):
+    """ Markov chain sampler, including MCMC and SA """
 
     def __init__(self, log_p: Density, q: Density, x0: ndarray,
                  n_samples: int, n_burns: int, n_restarts: int):
@@ -112,7 +113,7 @@ class MarkovChainSampler(Sampler):
 
 
 class MarkovChainMonteCarloSampler(MarkovChainSampler):
-
+    """ Markov chain Monte Carlo, a.k.a. Metropolis Hastings """
     def __init__(self, log_p: Density, q: Density, x0: ndarray,
                  n_samples: int = 10000, n_burns: int = 2000,
                  n_restarts: int = 0):
@@ -135,6 +136,7 @@ class MarkovChainMonteCarloSampler(MarkovChainSampler):
 
 
 class SimulatedAnnealingSampler(MarkovChainSampler):
+    """ simulated annealing """
 
     def __init__(self, log_p: Density, q: Density, x0: ndarray,
                  n_samples: int = 10000, n_burns: int = 2000,
@@ -162,18 +164,21 @@ class SimulatedAnnealingSampler(MarkovChainSampler):
 
 
 class ThermodynamicSASampler(SimulatedAnnealingSampler):
+    """ thermodynamic simulated annealing with adaptive cooling schedule """
 
     def __init__(self):
         super().__init__()
 
 
 class HamiltonianMCSampler(MarkovChainMonteCarloSampler):
+    """ Hamiltonian Monte Carlo with adaptive proposals based on gradient """
 
     def __init__(self):
         super().__init__()
 
 
 class NoUTurnHMCSampler(HamiltonianMCSampler):
+    """ Hamiltonian Monte Carlo with auto-calibration heuristics """
 
     def __init__(self):
         super().__init__()

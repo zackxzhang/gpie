@@ -22,6 +22,7 @@ def beale(x1_x2) -> float:
 
 
 def log_p(x):
+    """ unnormalized, bimodal density """
     return log(0.3 * exp(-0.2 * x**2) + 0.7 * exp(-0.2 * (x-10.) **2))
 
 
