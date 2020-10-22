@@ -150,10 +150,6 @@ class GradientDescentOptimizer(Optimizer):
         self._check()  # other attribute must be set by now
         self._restart()
 
-        if self.bounds.clamped():
-            warnings.warn( 'no optimization performed '
-                           'since parameters are fixed.' )
-            return False, self.fun(self.bounds.lowers), self.bounds.lowers
         # FIXME: parallelize
         minimize = lambda x0: self.min(fun=self.fun, jac=self.jac, x0=x0,
                                        bounds=self.bounds.get(self.backend))

@@ -13,18 +13,18 @@ from ..metric import dist
 from ..util import audit_X, audit_X_Z, B, V, is_array, concat_bounds
 
 
-def check_operand(operator):
+def verify_kernel_operands(kernel_operator):
     """ decorator for overloading kernel operators """
-    @wraps(operator)
-    def wrapped_operator(self, operand):
+    @wraps(kernel_operator)
+    def wrapped_kernel_operator(self, operand):
         if isinstance(operand, Kernel):
-            return operator(self, operand)
+            return kernel_operator(self, operand)
         elif isinstance(operand, float) and operand > 0.:
-            return operator(self, ConstantKernel(operand))
+            return kernel_operator(self, ConstantKernel(operand))
         else:
             raise ValueError('a kernel operator accepts either two kernels '
                              'or a positive float and a kernel as operands.')
-    return wrapped_operator
+    return wrapped_kernel_operator
 
 
 class Kernel(Model):
@@ -68,19 +68,19 @@ class Kernel(Model):
         compute kernel K(X, Z)
         """
 
-    @check_operand
+    @verify_kernel_operands
     def __add__(self, other):
         return Sum(self, other)
 
-    @check_operand
+    @verify_kernel_operands
     def __radd__(self, other):
         return Sum(other, self)
 
-    @check_operand
+    @verify_kernel_operands
     def __mul__(self, other):
         return Product(self, other)
 
-    @check_operand
+    @verify_kernel_operands
     def __rmul__(self, other):
         return Product(other, self)
 
@@ -91,19 +91,19 @@ class Kernel(Model):
             raise ValueError('kernel exponentiation only accepts '
                              'an integer or a float as exponent')
 
-    @check_operand
+    @verify_kernel_operands
     def __or__(self, other):
         return KroneckerSum(self, other)
 
-    @check_operand
+    @verify_kernel_operands
     def __ror__(self, other):
         return KroneckerSum(other, self)
 
-    @check_operand
+    @verify_kernel_operands
     def __and__(self, other):
         return KroneckerProduct(self, other)
 
-    @check_operand
+    @verify_kernel_operands
     def __rand__(self, other):
         return KroneckerProduct(other, self)
 

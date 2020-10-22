@@ -25,9 +25,21 @@ class AsymmetricMixin:
 
 class LogDensity(AsymmetricMixin, Density):
 
-    def __init__(self, log_density: Callable):
+    def __init__(self, log_density: Callable, n_variates: int):
         super().__init__()
         self.log_dst = log_density
+        self.n_variates = n_variates
+
+    @property
+    def n_variates(self):
+        return self._n_variates
+
+    @n_variates.setter
+    def n_variates(self, n_variates):
+        if isinstance(n_variates, int) and n_variates > 0:
+            self._n_variates = n_variates
+        else:
+            raise AttributeError('n_variates has to be a positive integer.')
 
     def __call__(self, x: ndarray):
         super().__call__(x)
@@ -37,7 +49,7 @@ class LogDensity(AsymmetricMixin, Density):
 class Dirac(SymmetricMixin, Distribution):
     """ Dirac distribution / delta function / point mass """
 
-    def __init__(self, mu: ndarray = np.zeros((1,))):
+    def __init__(self, mu: ndarray = np.zeros(1)):
         super().__init__()
         self.mu = mu
 
@@ -46,6 +58,10 @@ class Dirac(SymmetricMixin, Distribution):
 
     def __str__(self):
         return 'Dirac(mu={})'.format(self.mu)
+
+    @property
+    def n_variates(self):
+        return len(self.mu)
 
     def pdf(self, x: ndarray):
         return 1. if np.allclose(x, self.mu) else 0.
@@ -70,6 +86,10 @@ class Gaussian(SymmetricMixin, Distribution):
 
     def __str__(self):
         return 'Gaussian(mu={}, cov={})'.format(self.mu, self.cov)
+
+    @property
+    def n_variates(self):
+        return len(self.mu)
 
     def parametrise(self, **kwargs):
         if 'mu' in kwargs:
@@ -110,6 +130,10 @@ class Uniform(SymmetricMixin, Distribution):
 
     def __str__(self):
         return 'Uniform(a={}, b={})'.format(self.a, self.b)
+
+    @property
+    def n_variates(self):
+        return len(self.a)
 
     def parametrise(self, **kwargs):
         if 'a' in kwargs:

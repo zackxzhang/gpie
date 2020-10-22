@@ -6,3 +6,8 @@ from .kernels import ConstantKernel, WhiteKernel, RBFKernel, \
                      LinearKernel, NeuralKernel
 from .gaussian_process import GaussianProcessRegressor, tProcessRegressor
 from .bayes_optimizer import BayesianOptimizer
+
+__all__ = ['ConstantKernel', 'WhiteKernel', 'RBFKernel',
+           'RationalQuadraticKernel', 'MaternKernel', 'PeriodicKernel',
+           'SpectralKernel', 'LinearKernel', 'NeuralKernel',
+           'GaussianProcessRegressor', 'BayesianOptimizer']

@@ -41,11 +41,11 @@ class InferTestCase(unittest.TestCase):
 
     def test_mcmc(self):
         try:
-            mhs1 = MarkovChainMonteCarloSampler(LogDensity(log_p), Gaussian(),
+            mhs1 = MarkovChainMonteCarloSampler(LogDensity(log_p,1), Gaussian(),
                                                 np.zeros((1,)), n_restarts=0)
             chain = mhs1.sample()
             print(chain)
-            mhs2 = MarkovChainMonteCarloSampler(LogDensity(log_p), Gaussian(),
+            mhs2 = MarkovChainMonteCarloSampler(LogDensity(log_p,1), Gaussian(),
                                                 np.zeros((1,)), n_restarts=2)
             chains = mhs2.sample()
             print(chains)
@@ -54,11 +54,11 @@ class InferTestCase(unittest.TestCase):
 
     def test_sa(self):
         try:
-            sa1 = SimulatedAnnealingSampler(LogDensity(log_p), Gaussian(),
+            sa1 = SimulatedAnnealingSampler(LogDensity(log_p,1), Gaussian(),
                                             np.zeros((1,)), n_restarts=0)
             chain = sa1.sample()
             print(chain)
-            sa2 = SimulatedAnnealingSampler(LogDensity(log_p), Gaussian(),
+            sa2 = SimulatedAnnealingSampler(LogDensity(log_p,1), Gaussian(),
                                             np.zeros((1,)), n_restarts=2)
             chains = sa2.sample()
             print(chains)

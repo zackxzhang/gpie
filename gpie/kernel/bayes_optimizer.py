@@ -159,15 +159,11 @@ class BayesianOptimizer(Optimizer):
     def minimize(self, verbose: bool = False) -> Tuple[float, ndarray]:
         genesis = time()
 
-        if self.optimizer.bounds.clamped():
-            warnings.warn( 'no optimization performed '
-                           'since parameters are fixed.' )
-        else:
-            self._fit()
-            while len(self.y) < self.n_evals:
-                if time() - genesis > self.timeout:
-                    break
-                self._update()
+        self._fit()
+        while len(self.y) < self.n_evals:
+            if time() - genesis > self.timeout:
+                break
+            self._update()
 
         if verbose:
             return self.y, self.X

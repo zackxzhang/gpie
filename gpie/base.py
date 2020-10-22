@@ -1,17 +1,33 @@
 # -*- coding: utf-8 -*-
-# shared classes
+# shared infrastructure
 
 import numpy as np                                                # type: ignore
 import scipy                                                      # type: ignore
 import warnings
 from abc import ABC, abstractmethod
+from functools import wraps
 from numpy import ndarray
 from typing import Callable, Optional, Sequence, Tuple, Type, Union, Iterable
 from .util import check_X_update, check_X_y, check_X_y_update, \
                   is_array, map_array, concat_values, concat_bounds, V, B
 
-# optimizer backends
-OPT_BACKENDS = ('scipy')
+__all__ = ['Thetas']
+
+OPT_BACKENDS = ('scipy')  # optimizer backends
+
+
+def verify_density_operands(density_operator):
+    """ decorator for overloading density operators """
+    @wraps(density_operator)
+    def wrapped_density_operator(self, operand):
+        if isinstance(operand, Density):
+            if self.n_variates == operand.n_variates:
+                return density_operator(self, operand)
+            else:
+                return ValueError('densities must agree on n_variates')
+        else:
+            raise ValueError('a density operator only accepts two densities.')
+    return wrapped_density_operator
 
 
 class Density(ABC):
@@ -22,12 +38,17 @@ class Density(ABC):
         """ initialize density object """
 
     @abstractmethod
-    def __call__(self, x):
+    def __call__(self, x: ndarray):
         """ evaluate density at x """
 
     @abstractmethod
     def symmetric(self) -> bool:
         """ symmetric or asymmetric """
+
+    @property
+    @abstractmethod
+    def n_variates(self) -> int:
+        """ number of variates i.e. len(x) """
 
     def _log_ratio(self, x_star, x):
         """ q(x|x_star) / q(x_star|x) """
@@ -36,9 +57,54 @@ class Density(ABC):
         else:
             raise NotImplementedError
 
+    @verify_density_operands
+    def __mul__(self, other):
+        if isinstance(self, Distribution) and isinstance(other, Distribution):
+            return ProductDistribution(self, other)
+        else:
+            return ProductDensity(self, other)
+
+    @verify_density_operands
+    def __rmul__(self, other):
+        if isinstance(other, Distribution) and isinstance(self, Distribution):
+            return ProductDistribution(other, self)
+        else:
+            return ProductDensity(other, self)
+
+
+class ProductDensity(Density):
+    """ product density """
+
+    def __init__(self, d1: Density, d2: Density):
+        self._d1 = d1
+        self._d2 = d2
+
+    def __call__(self, x: ndarray):
+        return self.d1(x) *  self.d2(x)
+
+    @property
+    def d1(self):
+        return self._d1
+
+    @property
+    def d2(self):
+        return self._d2
+
+    def symmetric(self) -> bool:
+        """ sufficient but not necessary condition for symmetry """
+        return self.d1.symmetric() and self.d2.symmetric()
+
+    @property
+    def n_variates(self):
+        return self.d1.n_variates
+
 
 class Distribution(Density):
     """ normalized probability density """
+
+
+class ProductDistribution(Distribution, ProductDensity):
+    """ product distribution """
 
 
 class Bounds:
@@ -97,16 +163,6 @@ class Bounds:
             raise ValueError('dimension of values must agree with bounds.')
         return np.all(self.lowers - 1e-8 <= values) and \
                np.all(self.uppers + 1e-8 >= values)
-
-    def clamped(self) -> bool:
-        """
-        whether bounds squeeze
-        .. todo:: replace it withfixed or not flag for each individual value
-        """
-        if np.allclose(self.lowers, self.uppers):
-            return True
-        else:
-            return False
 
     def get(self, backend: str = 'scipy'):
         if backend == 'scipy':

@@ -116,3 +116,9 @@ audit_X_Z = fun2dec(check_X_Z)
 audit_X_y = fun2dec(check_X_y)
 audit_X_update = fun2dec(check_X_update)
 audit_X_y_update = fun2dec(check_X_y_update)
+
+
+class GridData:
+
+    def __init__(self, X: ndarray, y: Optional[ndarray] = None):
+        raise NotImplementedError
