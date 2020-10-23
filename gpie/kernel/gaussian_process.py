@@ -173,12 +173,12 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
 
     def hyper_posterior(self, n_samples: int = 0, **kwargs):
         super().hyper_posterior(n_samples)
-        hyper_posterior = LogDensity(partial(self._obj(self.X, self.y),
-                                             grad=False)               )
+        log_mll = partial(self._obj(self.X, self.y), grad=False)
+        k = len(self.thetas)
+        hyper_posterior = LogDensity(log_mll, k)
         if n_samples <= 0:
             return hyper_posterior
         else:
-            k = len(self.thetas)
             sampler = MarkovChainMonteCarloSampler(hyper_posterior,
                           Gaussian(np.zeros(k), np.eye(k)),
                           self.thetas.values, n_samples, **kwargs)
@@ -186,7 +186,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         # only support uninformative prior θ for now
 
     def fit(self, X: ndarray, y: ndarray, verbose: bool = False):
-        """ MAP estimatem under uniform prior """
+        """ MLE, or MAP under slab prior """
         super().fit(X, y)
         self.optimizer.fun = self._obj(self.X, self.y)
         self.optimizer.jac = True

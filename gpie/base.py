@@ -14,6 +14,7 @@ from .util import check_X_update, check_X_y, check_X_y_update, \
 __all__ = ['Thetas']
 
 OPT_BACKENDS = ('scipy')  # optimizer backends
+SPL_BACKENDS = ()         # sampler backends
 
 
 def verify_density_operands(density_operator):

@@ -963,14 +963,15 @@ class PeriodicKernel(StationaryMixin, Kernel):
 
     def _obj(self, X: ndarray) -> Callable:
         if self.isotropic:
+            # pairwise difference
+            D = X[:, newaxis, :] - X[newaxis, :, :]
             def fun(log_params)-> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period and length scale
                 p = exp(log_params[0])
                 l = exp(log_params[1])
                 # map to u-space
-                X_p = X * (pi/p)
-                D_p = X_p[:, newaxis, :] - X_p[newaxis, :, :]
+                D_p = D * (pi/p)
                 sinDp = np.sin(D_p)
                 # pairwise scaled l2 distance squared
                 R2_l2 = ((2./l * sinDp) ** 2).sum(axis=2)
@@ -987,14 +988,15 @@ class PeriodicKernel(StationaryMixin, Kernel):
                 raise ValueError( 'number of features must agree with '
                                   'number of periods / length scales.'  )
             dim = self.dim
+            # pairwise difference
+            D = X[:, newaxis, :] - X[newaxis, :, :]
             def fun(log_params)-> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period and length scale
                 p = np.exp(log_params[:dim])
                 l = np.exp(log_params[-dim:])
-                # map to u-space
-                X_p = np.einsum('ij,j->ij', X, pi/p)
-                D_p = X_p[:, newaxis, :] - X_p[newaxis, :, :]
+                # pairwise perioded difference
+                D_p = D * (pi/p)[newaxis, newaxis, :]
                 sinDp = np.sin(D_p)
                 sin2Dp4_l2 = np.einsum('ijk,k->ijk', sinDp, 2./l) ** 2
                 # pairwise scaled l2 distance squared
@@ -1027,37 +1029,31 @@ class PeriodicKernel(StationaryMixin, Kernel):
         K = np.exp(R2_l2 / -2.)
         return K
 
-# FIXME: add CosineKernel, spectral kernel = RBFKernel * CosineKernel?
 
-class SpectralKernel(StationaryMixin, Kernel):
+class CosineKernel(StationaryMixin, Kernel):
     """
-    additive component of spectral mixture kernel
-    whose spectral densitiy is Gaussian(p, l)
+    cosine kernel (as l -> inf, periodic(l) -> cosine)
+    k(x,z) = cos(p.T @ (x-z))  # FIXME: add pi
 
+    spectral mixture kernel = sum of spectral kernels, where
+    spectral kernel = rbf kernel * cosine kernel, i.e.
     k(x,z) = exp( - 1/2 * || (x-z)/l ||**2 ) * cos(p.T @ (x-z))
+    whose spectral densitiy is Gaussian(p, l)
 
     p (period): positive float (isotropic) or positive array (anisotropic)
                 defines contours' shape and scale
     l (length scale): positive float (isotropic) or positive array (anisotropic)
     """
 
-    def __init__(self, p: float = 1.0, l: float = 1.0,
-                 p_bounds: B = (1e-4, 1e+4), l_bounds: B = (1e-4, 1e+4)):
+    def __init__(self, p: float = 1.0, p_bounds: B = (1e-4, 1e+4)):
         check_positive_scalar_array(p, 'period')
-        check_positive_scalar_array(l, 'length scale')
-        if not (type(p) == type(l) == float or
-                isinstance(p, ndarray) and isinstance(l, ndarray) and
-                len(p) == len(l)):
-            raise ValueError('periods and length scales must be of same size.')
-        self._thetas = Thetas.from_seq((p, l), (p_bounds, l_bounds), log)
+        self._thetas = Thetas.from_seq((p,), (p_bounds,), log)
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        p = formatter(self.p)
-        l = formatter(self.l)
-        return 'SpectralKernel(p={}, l={})'.format(p, l)
+        return 'CosineKernel(p={})'.format(formatter(self.p))
 
     @property
     def thetas(self):
@@ -1065,108 +1061,73 @@ class SpectralKernel(StationaryMixin, Kernel):
 
     @property
     def hyperparameters(self):
-        return {'period': self.p, 'length scale': self.l}
+        return {'period': self.p}
 
     @property
     def isotropic(self):
-        if len(self.thetas) == 2:
+        if len(self.thetas) == 1:
             return True
         else:
             return False
 
     @property
-    def dim(self):
-        return len(self.thetas) // 2
-
-    @property
     def p(self):
         if self.isotropic:
-            return exp(self.thetas.values[0])
+            return exp(self.thetas.values)
         else:
-            return np.exp(self.thetas.values[:self.dim])
-
-    @property
-    def l(self):
-        if self.isotropic:
-            return exp(self.thetas.values[-1])
-        else:
-            return np.exp(self.thetas.values[-self.dim:])
+            return np.exp(self.thetas.values)
 
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
     def _obj(self, X: ndarray) -> Callable:
         if self.isotropic:
-            R2 = dist(X, X, metric='sqeuclidean')
+            R = dist(X, X, metric='euclidean')
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
-                # period and length scale
+                # period
                 p = exp(log_params[0])
-                l = exp(log_params[1])
-                # pairwise scaled l2 distance squared
-                R2_l2 = R2 / l**2
-                # pairwise difference summed
-                D = (X[:, newaxis, :] - X[newaxis, :, :]).sum(axis=2)
                 # precompute
-                Dp = D * p
-                rbf = np.exp(R2_l2 / -2.)
+                Rp = R * p
                 # kernel
-                K = rbf * np.cos(Dp)
+                K = np.cos(Rp)
                 # jacobian
-                d_K_d_logp = rbf * -np.sin(Dp) * Dp
-                d_K_d_logl = K * R2_l2
-                return K, np.dstack((d_K_d_logp, d_K_d_logl))
+                d_K_d_logp = (-np.sin(Rp) * Rp)[:, :, newaxis]
+                return K, d_K_d_logp
         else:
-            if len(self.l) != X.shape[1]:
+            if len(self.p) != X.shape[1]:
                 raise ValueError( 'number of features must agree '
                                   'with number of length scales.'  )
-            dim = self.dim
+            # pairwise difference
+            D = X[:, newaxis, :] - X[newaxis, :, :]
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
-                # period and length scale
-                p = np.exp(log_params[:dim])
-                l = np.exp(log_params[-dim:])
-                X_l = np.einsum('ij,j->ij', X, 1./l)
-                # pairwise scaled difference squared (feature being 3rd axis)
-                d_K_d_logl = (X_l[:, newaxis, :] - X_l[newaxis, :, :])**2
-                # pairwise scaled l2 distance squared (summing over feature)
-                R2_l2 = d_K_d_logl.sum(axis=2)
-                # pairwise difference
-                D = X[:, newaxis, :] - X[newaxis, :, :]
+                # period
+                p = np.exp(log_params)
                 # pairwise perioded difference
                 d_K_d_logp = D * p[newaxis, newaxis, :]
                 # precompute
                 Dp = d_K_d_logp.sum(axis=2)
-                rbf = np.exp(R2_l2 / -2.)
                 # kernel
-                K = rbf * np.cos(Dp)
+                K = np.cos(Dp)
                 # jacobian
-                d_K_d_logp *= (rbf * -np.sin(Dp))[:, :, newaxis]
-                d_K_d_logl *= K[:, :, newaxis]
-                return K, np.dstack((d_K_d_logp, d_K_d_logl))
+                d_K_d_logp *= (-np.sin(Dp))[:, :, newaxis]
+                return K, d_K_d_logp
         return fun
 
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
         super().__call__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
-            l = self.l * np.ones((k,))
             p = self.p * np.ones((k,))
         else:
-            if len(self.l) != k:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
             if len(self.p) != k:
                 raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
-            l = self.l
+                                  'with number of periods.'  )
             p = self.p
-        X_l = np.einsum('ij,j->ij', X, 1./l)
-        Z_l = np.einsum('ij,j->ij', Z, 1./l)
-        R2_l2 = dist(X_l, Z_l, metric='sqeuclidean')
         Rp = ((X[:, newaxis, :] - Z[newaxis, :, :]) * \
                p[newaxis, newaxis, :]).sum(axis=2)
-        K = np.exp(R2_l2 / -2.) * np.cos(Rp)
+        K = np.cos(Rp)
         return K
 
 
@@ -1175,14 +1136,23 @@ class LinearKernel(NonStationaryMixin, Kernel):
     linear kernel
 
     k(x,z) = (x/l).T @ (z/l)
-    # FIXME: reparametrise ((x-c)/l).T @ ((z-c)/l)?
+
     l (length scale): positive float (isotropic) or positive array (anisotropic)
+    ..todo:: reparametrise to k(x,z) = ((x-c)/l).T @ ((z-c)/l)
     """
 
     def __init__(self, l: V = 1.0, l_bounds: B = (1e-4, 1e+4)):
         super().__init__()
         check_positive_scalar_array(l, 'length scale')
         self._thetas = Thetas.from_seq((l,), (l_bounds,), log)
+        # refer to old commits and mimic spectral kernel's structure
+        # check_positive_scalar_array(p, 'period')
+        # check_positive_scalar_array(l, 'length scale')
+        # if not (type(p) == type(l) == float or
+        #         isinstance(p, ndarray) and isinstance(l, ndarray) and
+        #         len(p) == len(l)):
+        #     raise ValueError('periods and length scales must be of same size.')
+        # self._thetas = Thetas.from_seq((p, l), (p_bounds, l_bounds), log)
 
     def __repr__(self):
         return self.__str__()
@@ -1267,7 +1237,7 @@ class NeuralKernel(NonStationaryMixin, Kernel):
     """
     neural kernel
 
-    k(x, z) = 2/pi * arcsin( (x/l).T @ (z/l) + c ) /
+    k(x, z) = 2/π * arcsin( (x/l).T @ (z/l) + c ) /
               sqrt((||x/l||**2 + c + 1) * (||z/l||**2 + c + 1)) )
 
     c (intercept deviation): positive float
@@ -1369,7 +1339,7 @@ class NeuralKernel(NonStationaryMixin, Kernel):
                 D = N2_lc2 * np.sqrt(1 - J**2)  # denominator of jacobians
                 # jacobian
                 d_K_d_logc = 2.*c / pi / D * \
-                            (N_lc - .5*J * (n_lc[:, newaxis]+n_lc[newaxis, :]))
+                             (N_lc - .5*J * (n_lc[:, newaxis]+n_lc[newaxis, :]))
                 d_K_d_logl = 2./pi / D[:, :, newaxis] * \
                              ( (-2.*N_lc)[:, :, newaxis] * W +
                                J[:, :, newaxis] *

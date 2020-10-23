@@ -47,7 +47,10 @@ class LogDensity(AsymmetricMixin, Density):
 
 
 class Dirac(SymmetricMixin, Distribution):
-    """ Dirac distribution / delta function / point mass """
+    """
+    Dirac distribution / delta function / point mass
+    spike prior, tantamount to fixing the parameter
+    """
 
     def __init__(self, mu: ndarray = np.zeros(1)):
         super().__init__()
@@ -71,6 +74,34 @@ class Dirac(SymmetricMixin, Distribution):
 
     def sample(self, size: int = 1):
         return np.squeeze(np.tile(self.mu, (size, 1)))
+
+
+class Flat(SymmetricMixin, Density):
+    """
+    improper uniform
+    slab prior, tantamount to no prior belief whatsoever
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'flat prior'
+
+    def n_variates(self) -> int:
+        return 0
+
+    def pdf(self, x: ndarray):
+        return 1.
+
+    def logpdf(self, x: ndarray):
+        return 0.
+
+    def __call__(self, x: ndarray):
+        return self.pdf(x)
 
 
 class Gaussian(SymmetricMixin, Distribution):

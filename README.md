@@ -129,8 +129,8 @@ pip install --upgrade git+https://github.com/zackxzhang/gpie
 
 
 ### Coming Soon
-- an example of Bayesian optimization
-- a brief guide on kernel characteristics and how to compose them
+- an example of Bayesian optimization in comparison to gradient-based optimization
+- a brief guide on varying characteristics of different kernels and how to compose them
 - a demo of quantified Occam's razor encoded by Bayesian inference and its implication for model selection
 - Sphinx-generated documentation
 - ...
