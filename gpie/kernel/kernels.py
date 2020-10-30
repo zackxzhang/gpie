@@ -1132,18 +1132,21 @@ class CosineKernel(StationaryMixin, Kernel):
         return K
 
 
+
+
 class SpectralKernel(StationaryMixin, Kernel):
     """
-    spectral kernel
-    spectral density is Gaussian(1/p, 1/2πl)
+    spectral kernel, with spectral density Gaussian(u, v)
 
-    k_q(x,z) = exp( - 1/2 * || (x-z)/l ||**2 ) * Π_i cos( 2π/p * (x_i-z_i) )
+    k_q(x,z) = exp( - 1/2 * || (x-z)/l ||**2 ) * cos(p.T @ (x-z))
 
     p (period): positive float (isotropic) or positive array (anisotropic)
     l (length scale): positive float (isotropic) or positive array (anisotropic)
 
-    when we model spectral density to be scale-location mixture of Gaussians,
-    we arrive at spectral mixture kernel, k_sm = Σ_q k_q
+    model spectral density with scale-location mixture of Gaussians =>
+    spectral mixture kernel, k_sm = Σ_q k_q
+
+    ..todo:: reparametrise
     """
 
     def __init__(self, p: float = 1.0, l: float = 1.0,
@@ -1154,8 +1157,7 @@ class SpectralKernel(StationaryMixin, Kernel):
                 isinstance(p, ndarray) and isinstance(l, ndarray) and
                 len(p) == len(l)):
             raise ValueError('periods and length scales must be of same size.')
-        self._cos = CosineKernel(p, p_bounds)
-        self._rbf = RBFKernel(l, l_bounds)
+        self._thetas = Thetas.from_seq((p, l), (p_bounds, l_bounds), log)
 
     def __repr__(self):
         return self.__str__()
@@ -1166,16 +1168,8 @@ class SpectralKernel(StationaryMixin, Kernel):
         return 'SpectralKernel(p={}, l={})'.format(p, l)
 
     @property
-    def cos(self):
-        return self._cos
-
-    @property
-    def rbf(self):
-        return self._rbf
-
-    @property
     def thetas(self):
-        return self.cos.thetas + self.rbf.thetas
+        return self._thetas
 
     @property
     def hyperparameters(self):
@@ -1183,44 +1177,105 @@ class SpectralKernel(StationaryMixin, Kernel):
 
     @property
     def isotropic(self):
-        return self.cos.isotropic()
+        if len(self.thetas) == 2:
+            return True
+        else:
+            return False
 
     @property
-    def b(self):
-        return len(self.cos.thetas)
+    def dim(self):
+        return len(self.thetas) // 2
 
     @property
     def p(self):
-        return self.cos.p
+        if self.isotropic:
+            return exp(self.thetas.values[0])
+        else:
+            return np.exp(self.thetas.values[:self.dim])
 
     @property
     def l(self):
-        return self.rbf.l
+        if self.isotropic:
+            return exp(self.thetas.values[-1])
+        else:
+            return np.exp(self.thetas.values[-self.dim:])
 
     def _set(self, log_params: ndarray):
-        self._cos._set(log_params[:self.b])
-        self._rbf._set(log_params[self.b:])
+        self._thetas.set(log_params)
 
-    def _obj(self, X: ndarray):
-        super()._obj(X)
-        f1 = self.cos._obj(X)
-        f2 = self.rbf._obj(X)
-
-        def fun(log_params: ndarray):
-            K1, J1 = f1(log_params[:self.b])
-            K2, J2 = f2(log_params[self.b:])
-            return K1 * K2, np.dstack(( np.einsum('ij,ijk->ijk', K2, J1),
-                                        np.einsum('ij,ijk->ijk', K1, J2) ))
-
+    def _obj(self, X: ndarray) -> Callable:
+        if self.isotropic:
+            R2 = dist(X, X, metric='sqeuclidean')
+            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+                assert is_array(log_params, 1, np.number)
+                # period and length scale
+                p = exp(log_params[0])
+                l = exp(log_params[1])
+                # pairwise scaled l2 distance squared
+                R2_l2 = R2 / l**2
+                # pairwise difference summed
+                D = (X[:, newaxis, :] - X[newaxis, :, :]).sum(axis=2)
+                # precompute
+                Dp = D * p
+                rbf = np.exp(R2_l2 / -2.)
+                # kernel
+                K = rbf * np.cos(Dp)
+                # jacobian
+                d_K_d_logp = rbf * -np.sin(Dp) * Dp
+                d_K_d_logl = K * R2_l2
+                return K, np.dstack((d_K_d_logp, d_K_d_logl))
+        else:
+            if len(self.l) != X.shape[1]:
+                raise ValueError( 'number of features must agree '
+                                  'with number of length scales.'  )
+            dim = self.dim
+            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+                assert is_array(log_params, 1, np.number)
+                # period and length scale
+                p = np.exp(log_params[:dim])
+                l = np.exp(log_params[-dim:])
+                X_l = np.einsum('ij,j->ij', X, 1./l)
+                # pairwise scaled difference squared (feature being 3rd axis)
+                d_K_d_logl = (X_l[:, newaxis, :] - X_l[newaxis, :, :])**2
+                # pairwise scaled l2 distance squared (summing over feature)
+                R2_l2 = d_K_d_logl.sum(axis=2)
+                # pairwise difference
+                D = X[:, newaxis, :] - X[newaxis, :, :]
+                # pairwise perioded difference
+                d_K_d_logp = D * p[newaxis, newaxis, :]
+                # precompute
+                Dp = d_K_d_logp.sum(axis=2)
+                rbf = np.exp(R2_l2 / -2.)
+                # kernel
+                K = rbf * np.cos(Dp)
+                # jacobian
+                d_K_d_logp *= (rbf * -np.sin(Dp))[:, :, newaxis]
+                d_K_d_logl *= K[:, :, newaxis]
+                return K, np.dstack((d_K_d_logp, d_K_d_logl))
         return fun
 
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
         super().__call__(X, Z)
         k = X.shape[1]  # number of features
-        if (not self.isotropic) and self.b != k:
-            raise ValueError( 'number of features must agree with '
-                              'number of periods / length scales.'  )
-        return self.cos(X, Z) * self.rbf(X, Z)
+        if self.isotropic:
+            l = self.l * np.ones((k,))
+            p = self.p * np.ones((k,))
+        else:
+            if len(self.l) != k:
+                raise ValueError( 'number of features must agree '
+                                  'with number of length scales.'  )
+            if len(self.p) != k:
+                raise ValueError( 'number of features must agree '
+                                  'with number of length scales.'  )
+            l = self.l
+            p = self.p
+        X_l = np.einsum('ij,j->ij', X, 1./l)
+        Z_l = np.einsum('ij,j->ij', Z, 1./l)
+        R2_l2 = dist(X_l, Z_l, metric='sqeuclidean')
+        Rp = ((X[:, newaxis, :] - Z[newaxis, :, :]) * \
+               p[newaxis, newaxis, :]).sum(axis=2)
+        K = np.exp(R2_l2 / -2.) * np.cos(Rp)
+        return K
 
 
 class LinearKernel(NonStationaryMixin, Kernel):

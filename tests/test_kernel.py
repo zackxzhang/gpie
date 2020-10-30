@@ -205,15 +205,30 @@ class KernelTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(cosine(self.X, self.X), res))
         self._gpr_grad(cosine)
 
-
     def test_spectral_iso(self):
+        rbf = RBFKernel(1.)
         spectral = SpectralKernel(1., 1.)
+        self.assertTrue(np.allclose(rbf(self.X, self.X),
+                                    spectral(self.X, self.X)))
+        angle = np.zeros((3, 3))
+        angle[:, 1] = -1.
+        angle[:, 2] = -2.
+        self.assertTrue(np.allclose(rbf(self.X, self.Z) * np.cos(angle),
+                                    spectral(self.X, self.Z)))
         self._gpr_grad(spectral)
 
     def test_spectral_ard(self):
+        rbf = RBFKernel(1.)
         spectral = SpectralKernel(np.ones((3,)), np.ones((3,)),
                        p_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
                        l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        self.assertTrue(np.allclose(rbf(self.X, self.X),
+                                    spectral(self.X, self.X)))
+        angle = np.zeros((3, 3))
+        angle[:, 1] = -1.
+        angle[:, 2] = -2.
+        self.assertTrue(np.allclose(rbf(self.X, self.Z) * np.cos(angle),
+                                    spectral(self.X, self.Z)))
         self._gpr_grad(spectral)
 
     def test_linear_iso(self):
