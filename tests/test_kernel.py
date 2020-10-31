@@ -206,27 +206,27 @@ class KernelTestCase(unittest.TestCase):
         self._gpr_grad(cosine)
 
     def test_spectral_iso(self):
-        rbf = RBFKernel(1.)
+        rbf = RBFKernel(1./(2.*pi))
         spectral = SpectralKernel(1., 1.)
         self.assertTrue(np.allclose(rbf(self.X, self.X),
                                     spectral(self.X, self.X)))
         angle = np.zeros((3, 3))
-        angle[:, 1] = -1.
-        angle[:, 2] = -2.
+        angle[:, 1] = -1. * (2.*pi)
+        angle[:, 2] = -2. * (2.*pi)
         self.assertTrue(np.allclose(rbf(self.X, self.Z) * np.cos(angle),
                                     spectral(self.X, self.Z)))
         self._gpr_grad(spectral)
 
     def test_spectral_ard(self):
-        rbf = RBFKernel(1.)
+        rbf = RBFKernel(1./(2.*pi))
         spectral = SpectralKernel(np.ones((3,)), np.ones((3,)),
-                       p_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
-                       l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+                       u_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+                       v_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
         self.assertTrue(np.allclose(rbf(self.X, self.X),
                                     spectral(self.X, self.X)))
         angle = np.zeros((3, 3))
-        angle[:, 1] = -1.
-        angle[:, 2] = -2.
+        angle[:, 1] = -1. * (2.*pi)
+        angle[:, 2] = -2. * (2.*pi)
         self.assertTrue(np.allclose(rbf(self.X, self.Z) * np.cos(angle),
                                     spectral(self.X, self.Z)))
         self._gpr_grad(spectral)
