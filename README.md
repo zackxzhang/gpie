@@ -3,19 +3,19 @@
 [![Python](https://img.shields.io/pypi/pyversions/gpie)](https://www.python.org)
 [![PyPI](https://img.shields.io/pypi/v/gpie)](https://pypi.python.org/pypi/gpie)
 [![License](https://img.shields.io/github/license/zackxzhang/gpie)](https://opensource.org/licenses/BSD-3-Clause)
+[![Last Commit](https://img.shields.io/github/last-commit/zackxzhang/gpie)](https://github.com/zackxzhang/gpie)
 
 **G**aussian **P**rocess t**i**ny **e**xplorer
 
 - **simple**: an intuitive syntax inspired by scikit-learn
 - **powerful**: a compact core of expressive abstractions
 - **extensible**: a modular design for effortless composition
-- **lightweight**: minimal dependencies (standard library, numpy, scipy)
+- **lightweight**: a minimal set of dependencies {standard library, numpy, scipy}
 
 This is a ongoing research project with many parts currently **under construction** - please expect bugs and sharp edges.
 
 
 ### Features
-
 - several "avant-garde" kernels such as spectral kernel and neural kernel allow for exploration of new ideas
 - each kernel implements anisotropic variant besides isotropic one to support automatic relevance determination
 - a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", for example, handcrafting composite kernels based on expert knowledge or exploiting special structure of datasets
@@ -64,7 +64,7 @@ Note: parts of the project *in italic font* are under construction.
 
 ### Examples
 
-##### Gaussian process regression on Mauna Loa CO<sub>2</sub>
+##### [Gaussian process regression on Mauna Loa CO<sub>2</sub>](https://github.com/zackxzhang/gpie/blob/master/examples/mauna-loa-co2.ipynb)
 
 In this example, we use Gaussian process to model the concentration of CO<sub>2</sub> at Mauna Loa as a function of time.
 ```python
@@ -86,9 +86,9 @@ gpr.fit(X, y)
 ![alt text](./examples/mauna-loa-co2.png)
 In the plot, scattered dots represent historical observations, and shaded area shows the predictive interval (μ - σ, μ + σ) prophesied by a Gaussian process regressor trained on the historical data.
 
-##### Sampling inference for Gaussian process regression
+##### [Sampling inference for Gaussian process regression](https://github.com/zackxzhang/gpie/blob/master/examples/gpr-sampling-inference.ipynb)
 
-In this example, we use a synthesized dataset for ease of illustration and investigate sampling inference techniques such as Markov chain Monte Carlo. As a Gaussian process defines the predictive distribution, we can get a sense of it by sampling from its prior distribution (before seeing training set) and posterior distribution (after seeing training set).
+Here we use a synthesized dataset for ease of illustration and investigate sampling inference techniques such as Markov chain Monte Carlo. As a Gaussian process defines the predictive distribution, we can get a sense of it by sampling from its prior distribution (before seeing training set) and posterior distribution (after seeing training set).
 ```python
 # with the current hyperparameter configuration,
 # ... what is the prior distribution p(y_test)
@@ -106,12 +106,27 @@ hyper_posterior = gpr.hyper_posterior(n_samples=10000)
 ```
 ![alt text](./examples/posterior-a2.png)
 
+##### [Bayesian optimization](https://github.com/zackxzhang/gpie/blob/master/examples/bayesian-optimization.ipynb)
+We demonstrate a simple example of Bayesian optimization. It starts by exploring the objective function globally and shifts to exploiting "promising areas" as more observations are made.
+```python
+# number of evaluations
+n_evals = 10
+# surrogate model (Gaussian process)
+surrogate = GaussianProcessRegressor(1.0 * MaternKernel(d=5, l=1.0) +
+                                     1.0 * WhiteKernel())
+# bayesian optimizer
+bayesopt = BayesianOptimizer(fun=f, bounds=b, x0=x0, n_evals=n_evals,
+                             acquisition='lcb', surrogate=surrogate)
+bayesopt.minimize(callback=callback)
+```
+![alt text](./examples/bayesian-optimization.png)
+
 
 ### Backend
 
 GPie makes extensive use of de facto standard scientific computing packages in Python:
 
-- numpy: linear algebra, stochastic sampling  
+- numpy: linear algebra, stochastic sampling
 - scipy: gradient-based optimization, stochastic sampling
 
 
@@ -129,10 +144,9 @@ pip install --upgrade git+https://github.com/zackxzhang/gpie
 
 
 ### What's Next
-- an example of Bayesian optimization in comparison to gradient-based optimization (working)
+- implement Hamiltonian Monte Carlo and no-U-turn for more efficient sampling (working)
 - a brief guide on varying characteristics of different kernels and how to compose them (queued)
 - a demo of quantified Occam's razor encoded by Bayesian inference and its implication for model selection (queued)
-- implement Hamiltonian Monte Carlo and no-U-turn for more efficient sampling (researching)
 - implement Kronecker operators for scalable learning on grid data (researching)
 - replace Cholesky decomposition-based exact inference with Krylov subspace methods like conjugate gradient and Lanczos tridiagonalization for greater speed (researching)
 - ...

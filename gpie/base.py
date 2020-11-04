@@ -2,7 +2,7 @@
 # shared infrastructure
 
 import numpy as np                                                # type: ignore
-import scipy                                                      # type: ignore
+import scipy as sp                                                # type: ignore
 import warnings
 from abc import ABC, abstractmethod
 from functools import wraps
@@ -13,8 +13,8 @@ from .util import check_X_update, check_X_y, check_X_y_update, \
 
 __all__ = ['Thetas']
 
-OPT_BACKENDS = ('scipy')  # optimizer backends
-SPL_BACKENDS = ()         # sampler backends
+OPT_BACKENDS = {'scipy': sp.optimize.minimize}              # optimizer backends
+SPL_BACKENDS = {'numpy': np.random}                           # sampler backends
 
 
 def verify_density_operands(density_operator):
@@ -167,7 +167,7 @@ class Bounds:
 
     def get(self, backend: str = 'scipy'):
         if backend == 'scipy':
-            return scipy.optimize.Bounds(self.lowers, self.uppers)
+            return sp.optimize.Bounds(self.lowers, self.uppers)
         else:
             raise ValueError('backend must be one of {}'.format(OPT_BACKENDS))
 

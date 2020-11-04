@@ -18,8 +18,6 @@ class GradientDescentOptimizer(Optimizer):
     wrapper of optimizer backends
     """
 
-    backends = {'scipy'}
-
     def __init__(self, solver: str, bounds: Bounds, x0: ndarray,
                  fun: Optional[Callable] = None,
                  jac: Optional[Union[Callable, bool]] = None,
@@ -28,8 +26,6 @@ class GradientDescentOptimizer(Optimizer):
         super().__init__()
         # configuration
         self.backend = backend
-        # algorithm
-        self.min = solver
         # search space
         self.bounds = bounds
         # initialization
@@ -38,6 +34,8 @@ class GradientDescentOptimizer(Optimizer):
         # objective
         self.fun = fun
         self.jac = jac
+        # optimization algorithm
+        self.solver = solver
 
     def __repr__(self):
         return self.__str__()
@@ -54,15 +52,8 @@ class GradientDescentOptimizer(Optimizer):
         if backend == 'scipy':
             self._backend = backend
         else:
-            raise ValueError('backend must be one of {}'.format(OPT_BACKENDS))
-
-    @property
-    def min(self):
-        return self._min
-
-    @min.setter
-    def min(self, solver: str):
-        self._min = partial(scipy.optimize.minimize, method=solver)
+            raise ValueError('backend must be one of {}'
+                             .format(OPT_BACKENDS.keys()))
 
     @property
     def bounds(self):
@@ -138,25 +129,38 @@ class GradientDescentOptimizer(Optimizer):
         else:
             self.X0 = np.vstack([self.X0, X])
 
+    @property
+    def solver(self):
+        return self._solver
+
+    @solver.setter
+    def solver(self, solver: str):
+        """ check if solver is applicable and options are correctly set """
+        if solver == 'l-bfgs-b':
+            self._solver = solver
+        else:
+            raise NotImplementedError
+
     def _check(self):
         if self.fun is None:
             raise AttributeError('function is not set.')
         if self.jac is None:
             raise AttributeError('jacobian is not set.')
 
+    def min(self, x0: ndarray, **kwargs):
+        return OPT_BACKENDS[self.backend](
+                   fun=self.fun, jac=self.jac,
+                   bounds=self.bounds.get(self.backend),
+                   method=self.solver, x0=x0, **kwargs)
+
     def minimize(self, verbose: bool = False) -> Tuple[bool, float, ndarray]:
 
         assert isinstance(verbose, bool)
-        self._check()  # other attribute must be set by now
+        self._check()
         self._restart()
 
         # FIXME: parallelize
-        minimize = lambda x0: self.min(fun=self.fun, jac=self.jac, x0=x0,
-                                       bounds=self.bounds.get(self.backend))
-        results = [minimize(x0) for x0 in self.X0]
-
-        if verbose:
-            print(results)
+        results = [self.min(x0) for x0 in self.X0]
 
         b = np.array([res['success'] for res in results])
         X = np.vstack([res['x'] for res in results])
@@ -164,17 +168,15 @@ class GradientDescentOptimizer(Optimizer):
 
         if np.any(b):
             if verbose:
-                raise NotImplementedError
-                # return best trajectory
+                return results # return all trajectories
             else:
                 return True, y[b].min(), X[b][y[b].argmin()]
         else:
             if verbose:
-                raise NotImplementedError
-                # return all trajectory
+                return results # return all trajectories
             else:
                 return False, y.min(), X[y.argmin()]
 
     def maximize(self, verbose: bool = False) -> Tuple[bool, float, ndarray]:
-        """ ..todo:: how to flip maximize into minimize"""
+        """ ..todo:: flip maximize into minimize _f = lambda x: -f(x) """
         raise NotImplementedError
