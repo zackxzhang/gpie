@@ -124,7 +124,7 @@ bayesopt.minimize(callback=callback)
 
 ### Backend
 
-GPie makes extensive use of de facto standard scientific computing packages in Python:
+GPie makes extensive use of _de facto_ standard scientific computing packages in Python:
 
 - numpy: linear algebra, stochastic sampling
 - scipy: gradient-based optimization, stochastic sampling
@@ -143,10 +143,10 @@ pip install --upgrade git+https://github.com/zackxzhang/gpie
 ```
 
 
-### What's Next
-- implement Hamiltonian Monte Carlo and no-U-turn for more efficient sampling (working)
-- a brief guide on varying characteristics of different kernels and how to compose them (queued)
-- a demo of quantified Occam's razor encoded by Bayesian inference and its implication for model selection (queued)
-- implement Kronecker operators for scalable learning on grid data (researching)
-- replace Cholesky decomposition-based exact inference with Krylov subspace methods like conjugate gradient and Lanczos tridiagonalization for greater speed (researching)
+### Roadmap
+- implement Hamiltonian Monte Carlo and no-U-turn
+- add a demo on characteristics of different kernels
+- add a demo of quantified Occam's razor
+- implement Kronecker operators for scalable learning on grid data
+- replace Cholesky decomposition with Krylov subspace methods for speed
 - ...
