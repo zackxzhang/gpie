@@ -19,8 +19,6 @@ class GradientDescentOptimizer(Optimizer):
     """
 
     def __init__(self, solver: str, bounds: Bounds, x0: ndarray,
-                 fun: Optional[Callable] = None,
-                 jac: Optional[Union[Callable, bool]] = None,
                  n_restarts: int = 0, backend='scipy'):
 
         super().__init__()
@@ -31,9 +29,6 @@ class GradientDescentOptimizer(Optimizer):
         # initialization
         self.X0 = x0
         self.n_restarts = n_restarts
-        # objective
-        self.fun = fun
-        self.jac = jac
         # optimization algorithm
         self.solver = solver
 
@@ -64,28 +59,6 @@ class GradientDescentOptimizer(Optimizer):
         if not isinstance(bounds, Bounds):
             raise TypeError('bounds must be a Bounds object.')
         self._bounds = bounds
-
-    @property
-    def fun(self):
-        return self._fun
-
-    @fun.setter
-    def fun(self, fun: Optional[Callable]):
-        if callable(fun) or fun is None:
-            self._fun = fun
-        else:
-            raise TypeError('fun must be either callable or none.')
-
-    @property
-    def jac(self):
-        return self._jac
-
-    @jac.setter
-    def jac(self, jac: Union[Callable, bool]):
-        if callable(jac) or isinstance(jac, bool) or jac is None:
-            self._jac = jac
-        else:
-            raise TypeError('jac must be callable, bool or none.')
 
     @property
     def X0(self):
@@ -141,42 +114,80 @@ class GradientDescentOptimizer(Optimizer):
         else:
             raise NotImplementedError
 
-    def _check(self):
-        if self.fun is None:
-            raise AttributeError('function is not set.')
-        if self.jac is None:
-            raise AttributeError('jacobian is not set.')
-
-    def min(self, x0: ndarray, **kwargs):
+    def _min(self, fun: Callable, jac: Union[Callable, bool], x0: ndarray):
         return OPT_BACKENDS[self.backend](
-                   fun=self.fun, jac=self.jac,
+                   fun=fun, jac=jac, x0=x0,
                    bounds=self.bounds.get(self.backend),
-                   method=self.solver, x0=x0, **kwargs)
+                   method=self.solver)
 
-    def minimize(self, verbose: bool = False) -> Tuple[bool, float, ndarray]:
+    def minimize(self, fun: Callable, jac: Union[Callable, bool],
+                 verbose: bool = False,
+                 callback: Optional[Callable] = None) -> dict:
 
-        assert isinstance(verbose, bool)
-        self._check()
+        if not callable(fun):
+            raise TypeError('fun must be either callable or none.')
+        if not (callable(jac) or isinstance(jac, bool)):
+            raise TypeError('jac must be callable or boolean.')
+        if not isinstance(verbose, bool):
+            raise TypeError('verbose must be boolean.')
+
         self._restart()
 
         # FIXME: parallelize
-        results = [self.min(x0) for x0 in self.X0]
+        results = [self._min(fun, jac, x0) for x0 in self.X0]
 
         b = np.array([res['success'] for res in results])
         X = np.vstack([res['x'] for res in results])
         y = np.array([res['fun'] for res in results])
 
+        if callback:
+            callback(results)
+        if verbose:
+            return {'success': b, 'f': y, 'x': X}
         if np.any(b):
-            if verbose:
-                return results # return all trajectories
-            else:
-                return True, y[b].min(), X[b][y[b].argmin()]
+            return {'success': True,
+                    'f': y[b].min(),
+                    'x': X[b][y[b].argmin()]}
         else:
-            if verbose:
-                return results # return all trajectories
-            else:
-                return False, y.min(), X[y.argmin()]
+            return {'success': False,
+                    'f': y.min(),
+                    'x': X[y.argmin()]}
 
-    def maximize(self, verbose: bool = False) -> Tuple[bool, float, ndarray]:
-        """ ..todo:: flip maximize into minimize _f = lambda x: -f(x) """
-        raise NotImplementedError
+    def maximize(self, fun: Callable, jac: Union[Callable, bool],
+                 verbose: bool = False,
+                 callback: Optional[Callable] = None) -> dict:
+
+        if not callable(fun):
+            raise TypeError('fun must be either callable or none.')
+        if not (callable(jac) or isinstance(jac, bool)):
+            raise TypeError('jac must be callable or boolean.')
+        if not isinstance(verbose, bool):
+            raise TypeError('verbose must be boolean.')
+
+        self._restart()
+
+        if callable(jac):
+            _fun = lambda x: -fun(x)
+            _jac = lambda x: -jac(x)
+        else:
+            _fun = lambda x: tuple(-f for f in fun(x))
+            _jac = jac  # type: ignore
+
+        results = [self._min(_fun, _jac, x0) for x0 in self.X0]
+
+        b = np.array([res['success'] for res in results])
+        X = np.vstack([res['x'] for res in results])
+        y = np.array([res['fun'] for res in results])
+
+        if callback:
+            callback(results)
+        if verbose:
+            return {'success': b, 'f': -y, 'x': X}
+        if np.any(b):
+            return {'success': True,
+                    'f': -y[b].min(),
+                    'x': X[b][y[b].argmin()]}
+        else:
+            return {'success': False,
+                    'f': -y.min(),
+                    'x': X[y.argmin()]}

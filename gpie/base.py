@@ -353,7 +353,7 @@ class SupervisedModel(Model):
         super().__init__()
 
     @abstractmethod
-    def fit(self, X: ndarray, y: ndarray, verbose: bool = False):
+    def fit(self, X: ndarray, y: ndarray):
         check_X_y(X, y)
         self.X = X
         self.y =y
@@ -449,7 +449,7 @@ class Optimizer(ABC):
         """ initialize optimizer object """
 
     @abstractmethod
-    def minimize(self):
+    def minimize(self, fun: Callable, jac: Union[Callable, bool]):
         """ main routine """
 
 

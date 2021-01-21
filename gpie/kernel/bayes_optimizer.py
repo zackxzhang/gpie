@@ -47,7 +47,7 @@ class BayesianOptimizer(Optimizer):
 
         if solver in self.solvers:
             self._optimizer = GradientDescentOptimizer(solver=solver, x0=x0,
-                                                       bounds=bounds, jac=False)
+                                                       bounds=bounds)
         else:
             raise ValueError('solver must be in {}.'.format(self.solvers))
 
@@ -121,7 +121,7 @@ class BayesianOptimizer(Optimizer):
 
     def _update(self):
         # redraw acquisition surface based on updated surrogate
-        self.optimizer.fun = self.surrogate._acq(self.acquisition)
+        fun = self.surrogate._acq(self.acquisition)
         # start searches
         # a) from vicinity of queries (exploitation)
         # b) and from uniformly random states (exploration)
@@ -131,7 +131,8 @@ class BayesianOptimizer(Optimizer):
         # choose next query to be the minimizer of acquisition
         success = False
         try:
-            success, loss, x = self.optimizer.minimize()
+            result = self.optimizer.minimize(fun, False)
+            success, loss, x = (result[k] for k in ['success', 'f', 'x'])
             success &= np.all(dist(np.atleast_2d(x), self.X) > 1e-5)
         except ValueError:
             # numerical instability, e.g. minimize calls function with NaN
@@ -156,8 +157,8 @@ class BayesianOptimizer(Optimizer):
         # update surrogate
         self.surrogate.fit(self.X, self.y)
 
-    def minimize(self, callback: Optional[Callable] = None,
-                 verbose: bool = False) -> dict:
+    def minimize(self, verbose: bool = False,
+                 callback: Optional[Callable] = None) -> dict:
         genesis = time()
 
         self._fit()

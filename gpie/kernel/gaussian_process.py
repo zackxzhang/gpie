@@ -20,7 +20,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
 
     """
     Gaussian process regressor
-    models covariance functions only and not mean functions (e.g. linear trend)
+    covariance functions only (excluding mean functions such as linear trends)
     """
 
     inferences = {'exact'}
@@ -106,8 +106,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
                 invK = cho_solve((L, True), I)
                 S = invK_y @ invK_y.T - invK
                 grad = np.einsum('ij,ijk->k', S, dK) * .5
-                return -log_mll, -np.array(grad)
-                # FIXME: flip it back, implement maximize method in optimizer
+                return log_mll, np.array(grad)
             else:
                 return log_mll
         return fun
@@ -184,21 +183,16 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             return sampler.sample()
         # only support flat hyperprior θ for now
 
-    def fit(self, X: ndarray, y: ndarray, verbose: bool = False):
-        """ empirical bayes || type II maximum likelihood """
+    def fit(self, X: ndarray, y: ndarray):
+        """ empirical bayes, a.k.a. type II maximum likelihood """
         super().fit(X, y)
-        self.optimizer.fun = self._obj(self.X, self.y)
-        self.optimizer.jac = True
-        success, loss, kparams = self.optimizer.minimize(verbose)
-         # wipe out optimizer state, otherwise gpr object cannot be pickled
-         # because closure of fun
-        self.optimizer.fun = None
-        self.optimizer.jac = None
+        result = self.optimizer.maximize(self._obj(self.X, self.y), True)
+        success, log_mll, kparams = (result[k] for k in ['success', 'f', 'x'])
         if not success:
             warnings.warn( 'optimzation fails. try changing x0 or bounds, '
                            'or increasing number of restarts.' )
         self._set(kparams)
-        self.log_mll = -loss
+        self.log_mll = log_mll
         # precompute for prediction
         K = self.kernel(self.X, self.X)
         K[np.diag_indices_from(K)] += 1e-8  # jitter
