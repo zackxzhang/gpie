@@ -149,6 +149,11 @@ class Gaussian(SymmetricMixin, Distribution):
         return x_star, self._log_ratio(x_star, x)
 
 
+class Student(SymmetricMixin, Distribution):
+    """ multivariate Student (t) density """
+    pass
+
+
 class Uniform(SymmetricMixin, Distribution):
     """ independent(!) multivariate uniform density """
 

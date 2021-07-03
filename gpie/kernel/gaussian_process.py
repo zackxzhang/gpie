@@ -10,7 +10,7 @@ from scipy.linalg import cho_solve, cholesky                      # type: ignore
 from scipy.stats import norm                                      # type: ignore
 from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
 from ..base import BayesianSupervisedModel, Thetas, Density
-from ..infer import Dirac, Gaussian, LogDensity, \
+from ..infer import Dirac, Gaussian, Student, LogDensity, \
     GradientDescentOptimizer, MarkovChainMonteCarloSampler
 from ..util import audit_X_Z, audit_X_y, audit_X_y_update, is_array
 from .kernels import Kernel, RBFKernel, WhiteKernel
@@ -20,7 +20,6 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
 
     """
     Gaussian process regressor
-    covariance functions only (excluding mean functions such as linear trends)
     """
 
     inferences = {'exact'}
@@ -237,7 +236,11 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         # only support Dirac θ for now
 
 
-class tProcessRegressor(BayesianSupervisedModel):
+class StudentProcessRegressor(BayesianSupervisedModel):
+
+    """
+    Student process regressor
+    """
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
