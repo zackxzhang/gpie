@@ -12,14 +12,14 @@
 - **extensible**: a modular design for effortless composition
 - **lightweight**: a minimal set of dependencies {standard library, numpy, scipy}
 
-This is a ongoing research project with many parts currently **under construction** - please expect bugs and sharp edges.
+This is a ongoing project with many parts **under construction** - please expect frequent changes and sharp edges.
 
 
 ### Features
 - several "avant-garde" kernels such as spectral kernel and neural kernel allow for exploration of new ideas
-- each kernel implements anisotropic variant besides isotropic one to support automatic relevance determination
-- a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", for example, handcrafting composite kernels based on expert knowledge or exploiting special structure of datasets
-- core computations such as likelihood and gradient are carefully formulated for speed and stability
+- each kernel implements both isotropic and anisotropic versions to support automatic relevance determination
+- a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", *e.g.*, handcrafting composite kernels based on expert knowledge or exploiting special structure of datasets
+- core computations, such as likelihood and gradient, are carefully formulated for speed and stability
 - sampling inference embraces a probabilistic perspective in learning and prediction to promote robustness
 - Bayesian optimizer offers a principled strategy to optimize expensive and black-box objectives globally
 
@@ -132,7 +132,7 @@ GPie makes extensive use of _de facto_ standard scientific computing packages in
 
 ### Installation
 
-GPie requires Python 3.6 or greater. The easiest way to install GPie is from a prebuilt wheel using pip:
+GPie requires Python 3.7 or greater. The easiest way to install GPie is from a prebuilt wheel using pip:
 ```bash
 pip install --upgrade gpie
 ```
