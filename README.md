@@ -132,12 +132,12 @@ GPie makes extensive use of _de facto_ standard scientific computing packages in
 
 ### Installation
 
-GPie requires Python 3.7 or greater. The easiest way to install GPie is from a prebuilt wheel using pip:
+GPie requires Python 3.10 or greater. The easiest way to install GPie is from a prebuilt wheel using pip:
 ```bash
 pip install --upgrade gpie
 ```
 
-You can also install from source to try out the latest features (requires `pep517>=0.8.0` and `setuptools>=40.9.0`):
+You can also install from source to try out the latest features (requires `build>=0.7.0`):
 ```bash
 pip install --upgrade git+https://github.com/zackxzhang/gpie
 ```
