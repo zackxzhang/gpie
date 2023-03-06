@@ -2,7 +2,6 @@
 # bayesian optimizer
 
 import numpy as np                                                # type: ignore
-import scipy                                                      # type: ignore
 import warnings
 from time import time
 from numpy import ndarray                                         # type: ignore

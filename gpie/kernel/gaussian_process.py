@@ -236,10 +236,10 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         # only support Dirac θ for now
 
 
-class StudentProcessRegressor(BayesianSupervisedModel):
+class tProcessRegressor(BayesianSupervisedModel):
 
     """
-    Student process regressor
+    t process regressor
     """
 
     def __init__(self, *args, **kwargs):

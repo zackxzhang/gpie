@@ -86,7 +86,7 @@ class Kernel(Model):
 
     def __pow__(self, exponent):
         if isinstance(exponent, (int, float)):
-            return Exponetiation(self, exponent)
+            return Power(self, exponent)
         else:
             raise ValueError('kernel exponentiation only accepts '
                              'an integer or a float as exponent')
@@ -228,7 +228,7 @@ class Product(Kernel):
         return self.k1(X, Z) * self.k2(X, Z)
 
 
-class Exponetiation(Kernel):
+class Power(Kernel):
     """ elementwise exponentiation of a kernel """
 
     def __init__(self, k: Kernel, exponent: Union[int, float]):
