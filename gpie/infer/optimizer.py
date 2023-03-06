@@ -67,7 +67,7 @@ class GradientDescentOptimizer(Optimizer):
     @X0.setter
     def X0(self, x0: ndarray):
         if not (isinstance(x0, ndarray) and x0.ndim in (1, 2) and \
-                x0.dtype == np.number and np.all(np.isfinite(x0))):
+                np.issubdtype(x0.dtype, np.number) and np.all(np.isfinite(x0))):
             raise TypeError('x0 must be a 1d or 2d numeric array.')
         X0 = np.atleast_2d(x0)
         for x in X0:

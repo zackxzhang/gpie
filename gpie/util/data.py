@@ -13,7 +13,7 @@ array16 = partial(np.array, dtype=np.float16)
 
 def is_array(x: Any, ndim=1, dtype=np.number) -> bool:
     if isinstance(x, ndarray) and x.ndim == ndim \
-        and (x.dtype == dtype or x.dtype.type == dtype):
+        and np.issubdtype(x.dtype, dtype):
         return True
     else:
         return False
@@ -33,7 +33,7 @@ def concat_values(*values: V) -> ndarray:
         for v in values:
             if isinstance(v, float):
                 vs.append(v)
-            elif isinstance(v, ndarray) and v.dtype == np.number:
+            elif isinstance(v, ndarray) and np.issubdtype(v.dtype, np.number):
                 vs.extend(v.flat)
             else:
                 raise TypeError('values must be float or array.')
@@ -49,7 +49,8 @@ def concat_bounds(*bounds: B) -> Tuple[ndarray, ndarray]:
                     ls.append(b[0])
                     us.append(b[1])
                 elif isinstance(b[0], ndarray) and isinstance(b[1], ndarray) \
-                    and b[0].dtype == np.number and b[1].dtype == np.number:
+                    and np.issubdtype(b[0].dtype, np.number) \
+                    and np.issubdtype(b[1].dtype, np.number):
                     ls.extend(b[0].flat)
                     us.extend(b[1].flat)
                 else:

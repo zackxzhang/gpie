@@ -33,9 +33,7 @@ class InferTestCase(unittest.TestCase):
         x = np.array([2.5, 1.])
         try:
             gdo = GradientDescentOptimizer(solver='l-bfgs-b', bounds=b, x0=x)
-            gdo.fun = beale
-            gdo.jac = False
-            print(gdo.minimize())
+            print(gdo.minimize(beale, False))
         except Exception:
             self.fail('gradient descent optimizer fails.')
 
@@ -67,4 +65,5 @@ class InferTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
+
     unittest.main()
