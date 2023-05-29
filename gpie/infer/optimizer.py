@@ -18,8 +18,8 @@ class GradientDescentOptimizer(Optimizer):
     wrapper of optimizer backends
     """
 
-    def __init__(self, solver: str, bounds: Bounds, x0: ndarray,
-                 n_restarts: int = 0, backend='scipy'):
+    def __init__(self, bounds: Bounds, x0: ndarray, n_restarts: int = 0,
+                 solver: str = 'l-bfgs-b', backend='scipy'):
 
         super().__init__()
         # configuration
@@ -125,7 +125,7 @@ class GradientDescentOptimizer(Optimizer):
                  callback: Optional[Callable] = None) -> dict:
 
         if not callable(fun):
-            raise TypeError('fun must be either callable or none.')
+            raise TypeError('fun must be callable.')
         if not (callable(jac) or isinstance(jac, bool)):
             raise TypeError('jac must be callable or boolean.')
         if not isinstance(verbose, bool):
@@ -158,7 +158,7 @@ class GradientDescentOptimizer(Optimizer):
                  callback: Optional[Callable] = None) -> dict:
 
         if not callable(fun):
-            raise TypeError('fun must be either callable or none.')
+            raise TypeError('fun must be callable.')
         if not (callable(jac) or isinstance(jac, bool)):
             raise TypeError('jac must be callable or boolean.')
         if not isinstance(verbose, bool):

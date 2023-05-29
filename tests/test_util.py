@@ -118,5 +118,7 @@ class UtilTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             check_X_y(A, A)
 
+
 if __name__ == '__main__':
+
     unittest.main()

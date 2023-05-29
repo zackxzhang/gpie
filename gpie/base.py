@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# shared infrastructure
+# infrastructure
 
 import numpy as np                                                # type: ignore
 import scipy as sp                                                # type: ignore
@@ -11,7 +11,8 @@ from typing import Callable, Optional, Sequence, Tuple, Type, Union, Iterable
 from .util import check_X_update, check_X_y, check_X_y_update, \
                   is_array, map_array, concat_values, concat_bounds, V, B
 
-__all__ = ['Thetas']
+
+__all__ = ['Thetas', 'Bounds']
 
 OPT_BACKENDS = {'scipy': sp.optimize.minimize}              # optimizer backends
 SPL_BACKENDS = {'numpy': np.random}                           # sampler backends
@@ -376,7 +377,6 @@ class SupervisedModel(Model):
 
 class BayesianSupervisedModel(SupervisedModel):
 
-
     @abstractmethod
     def hyper_prior(self, n_samples: int = 0):
         """
@@ -449,7 +449,7 @@ class Optimizer(ABC):
         """ initialize optimizer object """
 
     @abstractmethod
-    def minimize(self, fun: Callable, jac: Union[Callable, bool]):
+    def minimize(self):
         """ main routine """
 
 

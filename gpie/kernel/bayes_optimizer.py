@@ -18,10 +18,12 @@ surrogates = (GaussianProcessRegressor, tProcessRegressor)
 
 
 class BayesianOptimizer(Optimizer):
+
     """
     surrogate models blackbox primal objective in a probablistic perspective
-    acquisition evaluates input space
+    acquisition functions evaluate optimal potential within input space
     """
+
     solvers = {'l-bfgs-b'}
     acquisitions = {'pi', 'ei', 'lcb'}
 
@@ -29,7 +31,7 @@ class BayesianOptimizer(Optimizer):
                  x0: ndarray, y0: Optional[ndarray] = None,
                  n_evals: int = 30, timeout: int = 600,
                  surrogate: Surrogate = GaussianProcessRegressor(),
-                 acquisition: str = 'ei', solver='l-bfgs-b'):
+                 acquisition: str = 'ei', solver: str = 'l-bfgs-b'):
 
         super().__init__()
 
