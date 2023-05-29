@@ -1,6 +1,37 @@
 [build-system]
 requires = [
-  "setuptools >= 40.9.0",
-  "wheel",
+    "setuptools>=63.0.0",
+    "wheel",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpie"
+authors = [
+    {name = "Zack Zhang", email = "zack.zhang.coder@gmail.com"},
+]
+description = "GPie: Gaussian Process tiny explorer"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.23",
+    "scipy>=1.9",
+]
+classifiers =   [
+    "Topic :: Scientific/Engineering",
+    "Programming Language :: Python :: 3",
+]
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://github.com/zackxzhang/gpie"
+repository = "https://github.com/zackxzhang/gpie"
+
+[tool.setuptools]
+include-package-data = false
+packages.find.include = ["gpie*"]
+packages.find.exclude = ["examples*", "tests*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "gpie.__version__"}
