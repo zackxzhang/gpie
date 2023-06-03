@@ -7,7 +7,8 @@ from functools import partial
 from math import pi, exp, log, sqrt
 from numpy import ndarray
 from scipy.linalg import cho_solve, cholesky                      # type: ignore
-from scipy.stats import norm                                      # type: ignore
+from scipy.stats import norm, t                                   # type: ignore
+from scipy.special import gamma                                   # type: ignore
 from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
 from ..base import BayesianSupervisedModel, Thetas, Density
 from ..infer import Dirac, Gaussian, Student, LogDensity, \
@@ -154,7 +155,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
                              .format(self.aquisitions))
 
     def config(self, x0: Optional[ndarray] = None,
-                n_restarts: Optional[int] = None):
+               n_restarts: Optional[int] = None):
         if x0 is not None:
             self.optimizer.X0 = x0
         if n_restarts is not None:
@@ -164,9 +165,9 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         super().hyper_prior(n_samples)
         raise NotImplementedError
         if n_samples <= 0:
-            return
+            ...
         else:
-            return
+            ...
 
     def hyper_posterior(self, n_samples: int = 0, **kwargs):
         super().hyper_posterior(n_samples)
@@ -242,5 +243,121 @@ class tProcessRegressor(BayesianSupervisedModel):
     t process regressor
     """
 
-    def __init__(self, *args, **kwargs):
+    inferences = {'exact'}
+    solvers = {'l-bfgs-b'}
+    aquisitions = {'pi', 'ei', 'lcb'}
+
+    def __init__(self, nu: int = 3,
+                 kernel: Kernel = 1. * RBFKernel(1.) + 1. * WhiteKernel(),
+                 inference: str = 'exact', solver: str = 'l-bfgs-b'):
+
+        super().__init__()
+
+        if isinstance(nu, int) and nu > 0:
+            self._nu = nu
+        else:
+            raise ValueError( 'only positive integers are supported for nu, '
+                              'i.e. degree of freedom for t distribution.'    )
+
+        if isinstance(kernel, Kernel):
+            self._kernel = kernel
+        else:
+            raise TypeError('kernel must be a Kernel object.')
+
+        if inference in self.inferences:
+            self._inference = inference
+        else:
+            raise ValueError('inference must be in {}.'.format(self.inferences))
+
+        if solver in self.solvers:
+            self._optimizer = \
+                GradientDescentOptimizer(solver=solver,
+                                         bounds=kernel.thetas.bounds,
+                                         x0=kernel.thetas.values)
+        else:
+            raise ValueError('solver must be in {}.'.format(self.solvers))
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'tProcessRegressor(nu={}, kernel={})'.format(self.nu, self.kernel)
+
+    @property
+    def nu(self):
+        return self._nu
+
+    @property
+    def kernel(self):
+        return self._kernel
+
+    @property
+    def thetas(self):
+        return self.kernel.thetas
+
+    @property
+    def hyperparameters(self):
+        return {'nu': self.nu} + self.kernel.hyperparameters
+
+    @property
+    def inference(self):
+        return self._inference
+
+    @property
+    def optimizer(self):
+        return self._optimizer
+
+    def fitted(self) -> bool:
+        return hasattr(self, 'dual_weights')
+
+    def _set(self, kparams: ndarray):
+        self.kernel._set(kparams)
+
+    def _obj(self, X: ndarray, y: ndarray) -> Callable:
+        ...
+
+    def _acq(self, acquisition: str) -> Callable:
+        ...
+
+    def config(self, x0: Optional[ndarray] = None,
+               n_restarts: Optional[int] = None):
+        if x0 is not None:
+            self.optimizer.X0 = x0
+        if n_restarts is not None:
+            self.optimizer.n_restarts = n_restarts
+
+    def hyper_prior(self, n_samples: int = 0):
+        super().hyper_prior(n_samples)
         raise NotImplementedError
+        if n_samples <= 0:
+            ...
+        else:
+            ...
+
+    def hyper_posterior(self, n_samples: int = 0, **kwargs):
+        super().hyper_posterior(n_samples)
+        log_mll = partial(self._obj(self.X, self.y), grad=False)
+        k = len(self.thetas)
+        hyper_posterior = LogDensity(log_mll, k)
+        if n_samples <= 0:
+            return hyper_posterior
+        else:
+            sampler = MarkovChainMonteCarloSampler(hyper_posterior,
+                          Gaussian(np.zeros(k), np.eye(k)),
+                          self.thetas.values, n_samples, **kwargs)
+            return sampler.sample()
+        # only support flat hyperprior θ for now
+
+    def fit(self, X: ndarray, y: ndarray):
+        ...
+
+    def predict(self, X: ndarray) -> ndarray:
+        ...
+
+    def prior_predictive(self, X: ndarray, n_samples: int = 0) \
+        -> Union[Gaussian, ndarray]:
+        ...
+
+    def posterior_predictive(self, X: ndarray, n_samples: int = 0) \
+        -> Union[Gaussian, ndarray]:
+        ...
