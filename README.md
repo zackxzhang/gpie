@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/github/license/zackxzhang/gpie)](https://opensource.org/licenses/BSD-3-Clause)
 [![Last Commit](https://img.shields.io/github/last-commit/zackxzhang/gpie)](https://github.com/zackxzhang/gpie)
 
+<img src="./logo/gp.svg" height="160" align="right">
+
 **G**aussian **P**rocess t**i**ny **e**xplorer
 
 - **simple**: an intuitive syntax inspired by scikit-learn
