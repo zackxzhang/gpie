@@ -5,8 +5,10 @@ import numpy as np                                                # type: ignore
 import unittest
 from math import exp, log
 from gpie.base import Bounds
-from gpie.infer import LogDensity, Gaussian, GradientDescentOptimizer, \
-                       MarkovChainMonteCarloSampler, SimulatedAnnealingSampler
+from gpie.infer import (
+    LogDensity, Gaussian, GradientDescentOptimizer,
+    MarkovChainMonteCarloSampler, SimulatedAnnealingSampler
+)
 
 
 def beale(x1_x2) -> float:
@@ -21,9 +23,9 @@ def beale(x1_x2) -> float:
            (2.625 - x1 + x1 * x2**3) ** 2
 
 
-def log_p(x):
+def log_p(x: np.ndarray):
     """ unnormalized, bimodal density """
-    return log(0.3 * exp(-0.2 * x**2) + 0.7 * exp(-0.2 * (x-10.) **2))
+    return np.log(0.3 * np.exp(-0.2 * x**2) + 0.7 * np.exp(-0.2 * (x-10.) **2))
 
 
 class InferTestCase(unittest.TestCase):
@@ -39,12 +41,16 @@ class InferTestCase(unittest.TestCase):
 
     def test_mcmc(self):
         try:
-            mhs1 = MarkovChainMonteCarloSampler(LogDensity(log_p,1), Gaussian(),
-                                                np.zeros((1,)), n_restarts=0)
+            mhs1 = MarkovChainMonteCarloSampler(
+                LogDensity(log_p, 1), Gaussian(),
+                np.zeros((1,)), n_restarts=0
+            )
             chain = mhs1.sample()
             print(chain)
-            mhs2 = MarkovChainMonteCarloSampler(LogDensity(log_p,1), Gaussian(),
-                                                np.zeros((1,)), n_restarts=2)
+            mhs2 = MarkovChainMonteCarloSampler(
+                LogDensity(log_p, 1), Gaussian(),
+                np.zeros((1,)), n_restarts=2
+            )
             chains = mhs2.sample()
             print(chains)
         except Exception:
@@ -52,12 +58,16 @@ class InferTestCase(unittest.TestCase):
 
     def test_sa(self):
         try:
-            sa1 = SimulatedAnnealingSampler(LogDensity(log_p,1), Gaussian(),
-                                            np.zeros((1,)), n_restarts=0)
+            sa1 = SimulatedAnnealingSampler(
+                LogDensity(log_p, 1), Gaussian(),
+                np.zeros((1,)), n_restarts=0
+            )
             chain = sa1.sample()
             print(chain)
-            sa2 = SimulatedAnnealingSampler(LogDensity(log_p,1), Gaussian(),
-                                            np.zeros((1,)), n_restarts=2)
+            sa2 = SimulatedAnnealingSampler(
+                LogDensity(log_p, 1), Gaussian(),
+                np.zeros((1,)), n_restarts=2
+            )
             chains = sa2.sample()
             print(chains)
         except Exception:

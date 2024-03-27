@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# gaussian process, t process
+# gaussian process
 
 import numpy as np                                                # type: ignore
 import warnings
@@ -11,17 +11,17 @@ from scipy.stats import norm, t                                   # type: ignore
 from scipy.special import gamma                                   # type: ignore
 from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
 from ..base import BayesianSupervisedModel, Thetas, Density
-from ..infer import Dirac, Gaussian, Student, LogDensity, \
+from ..infer import (
+    Dirac, Gaussian, Student, LogDensity,
     GradientDescentOptimizer, MarkovChainMonteCarloSampler
+)
 from ..util import audit_X_Z, audit_X_y, audit_X_y_update, is_array
 from .kernels import Kernel, RBFKernel, WhiteKernel
 
 
 class GaussianProcessRegressor(BayesianSupervisedModel):
 
-    """
-    Gaussian process regressor
-    """
+    """ Gaussian process regressor """
 
     inferences = {'exact'}
     solvers = {'l-bfgs-b'}
@@ -239,9 +239,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
 
 class tProcessRegressor(BayesianSupervisedModel):
 
-    """
-    t process regressor
-    """
+    """ t process regressor """
 
     inferences = {'exact'}
     solvers = {'l-bfgs-b'}
@@ -313,10 +311,10 @@ class tProcessRegressor(BayesianSupervisedModel):
     def _set(self, kparams: ndarray):
         self.kernel._set(kparams)
 
-    def _obj(self, X: ndarray, y: ndarray) -> Callable:
+    def _obj(self, X: ndarray, y: ndarray) -> Callable:  # FIXME
         ...
 
-    def _acq(self, acquisition: str) -> Callable:
+    def _acq(self, acquisition: str) -> Callable:  # FIXME
         ...
 
     def config(self, x0: Optional[ndarray] = None,

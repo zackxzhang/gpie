@@ -567,7 +567,7 @@ class RBFKernel(StationaryMixin, Kernel):
     @property
     def l(self):
         if self.isotropic:
-            return exp(self.thetas.values)
+            return exp(self.thetas.values.item())
         else:
             return np.exp(self.thetas.values)
 
@@ -825,7 +825,7 @@ class MaternKernel(StationaryMixin, Kernel):
     @property
     def l(self):
         if self.isotropic:
-            return exp(self.thetas.values)
+            return exp(self.thetas.values.item())
         else:
             return np.exp(self.thetas.values)
 
@@ -1066,7 +1066,7 @@ class CosineKernel(StationaryMixin, Kernel):
     @property
     def p(self):
         if self.isotropic:
-            return exp(self.thetas.values)
+            return exp(self.thetas.values.item())
         else:
             return np.exp(self.thetas.values)
 
@@ -1309,7 +1309,7 @@ class LinearKernel(NonStationaryMixin, Kernel):
     @property
     def l(self):
         if self.isotropic:
-            return exp(self.thetas.values)
+            return exp(self.thetas.values.item())
         else:
             return np.exp(self.thetas.values)
 

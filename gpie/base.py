@@ -8,11 +8,14 @@ from abc import ABC, abstractmethod
 from functools import wraps
 from numpy import ndarray
 from typing import Callable, Optional, Sequence, Tuple, Type, Union, Iterable
-from .util import check_X_update, check_X_y, check_X_y_update, \
-                  is_array, map_array, concat_values, concat_bounds, V, B
+from .util import (
+    check_X_update, check_X_y, check_X_y_update,
+    is_array, map_array, concat_values, concat_bounds, V, B
+)
 
 
 __all__ = ['Thetas', 'Bounds']
+
 
 OPT_BACKENDS = {'scipy': sp.optimize.minimize}              # optimizer backends
 SPL_BACKENDS = {'numpy': np.random}                           # sampler backends
@@ -245,7 +248,7 @@ class Thetas:
         """
         parameters are assigned with values/distribution or not
         special case: zero-size theta returns True
-        .. todo:: returns True if thetas has None as values but has prior dst
+        TODO: returns True if thetas has None as values but has prior dst
         """
         return np.all(np.isfinite(self.values))
 
@@ -253,7 +256,7 @@ class Thetas:
 class Hypers:
     """
     a view of learnable and fixed parameters
-    .. todo:: potentially no longer useful
+    TODO: potentially no longer useful
     """
 
     def __init__(self, names: ndarray, values: ndarray):
@@ -384,7 +387,7 @@ class BayesianSupervisedModel(SupervisedModel):
         if n_samples > 0, returns #n_samples θ's (vertically stacked)
         if n_samples = 0, returns a distribution object
         """
-        # FIXME: check if thetas has prior distributions or just a point value
+        # TODO: check if thetas has prior distributions or just a point value
         # implement UninformedPrior class that always returns 1 as density
         if self.fitted():
             raise AttributeError('model already fitted. please refer to model '

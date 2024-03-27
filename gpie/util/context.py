@@ -9,7 +9,9 @@ from datetime import datetime
 
 
 class RandomSeed:
+
     """ change random seed within context """
+
     def __init__(self, seed: int):
         self.seed = seed
         self.state = np.random.get_state()
@@ -22,7 +24,9 @@ class RandomSeed:
 
 
 class ChDir:
+
     """ change directory within context """
+
     def __init__(self, path: str):
         self.old_dir = os.getcwd()
         self.new_dir = path
@@ -35,7 +39,9 @@ class ChDir:
 
 
 class Timer:
+
     """ record time spent within context """
+
     def __init__(self, prompt: str):
         self.prompt = prompt + ' takes time: '
 
@@ -50,7 +56,9 @@ class Timer:
 
 
 class TimeOut:
+
     """ timeout within context """
+
     def __init__(self, seconds: int, message='time out'):
         self.seconds = seconds
         self.message = message
