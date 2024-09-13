@@ -12,16 +12,17 @@
 - **simple**: an intuitive syntax inspired by scikit-learn
 - **powerful**: a compact core of expressive abstractions
 - **extensible**: a modular design for effortless composition
-- **lightweight**: a minimal set of dependencies {standard library, numpy, scipy}
+- **lightweight**: a minimal set of dependencies (numpy and scipy only)
 
-This is a ongoing project with many parts **under construction** - please expect frequent changes and sharp edges.
+This is a ongoing project with many parts *under construction* - please expect frequent changes and sharp edges.
 
 
 ### Features
-- several "avant-garde" kernels such as spectral kernel and neural kernel allow for exploration of new ideas
+- several *avant-garde* kernels such as spectral kernel and neural kernel allow for exploration of new ideas
 - each kernel implements both isotropic and anisotropic versions to support automatic relevance determination
-- a full-fledged toolkit of kernel operators enables all sorts of "kernel engineering", *e.g.*, handcrafting composite kernels based on expert knowledge or exploiting special structure of datasets
-- core computations, such as likelihood and gradient, are carefully formulated for speed and stability
+- a full-fledged toolkit of kernel operators enables all sorts of **kernel engineering**, *e.g.*,
+    handcrafting composite kernels based on expert knowledge or exploiting special structure of datasets
+- core computations, such as likelihood and gradient, are carefully optimized for speed and stability
 - sampling inference embraces a probabilistic perspective in learning and prediction to promote robustness
 - Bayesian optimizer offers a principled strategy to optimize expensive and black-box objectives globally
 
@@ -38,13 +39,8 @@ This is a ongoing project with many parts **under construction** - please expect
     - spectral kernel
     - neural kernel
 - kernel operators
-    - Hadamard (element-wise)
-        - sum
-        - product
-        - exponentiation
-    - *Kronecker*
-        - *sum*
-        - *product*
+    - Hadamard: sum, product, exponentiation
+    - *Kronecker*: *sum*, *product*
 - Gaussian process
     - regression
     - *classification*
@@ -126,7 +122,7 @@ bayesopt.minimize(callback=callback)
 
 ### Backend
 
-GPie makes extensive use of _de facto_ standard scientific computing packages in Python:
+GPie makes extensive use of *de facto* standard scientific computing packages in Python:
 
 - numpy: linear algebra, stochastic sampling
 - scipy: gradient-based optimization, stochastic sampling
@@ -147,8 +143,6 @@ pip install --upgrade git+https://github.com/zackxzhang/gpie
 
 ### Roadmap
 - implement Hamiltonian Monte Carlo and no-U-turn
+- implement Kronecker operators for scalable learning on grid data
 - add a demo on characteristics of different kernels
 - add a demo of quantified Occam's razor
-- implement Kronecker operators for scalable learning on grid data
-- replace Cholesky decomposition with Krylov subspace methods for speed
-- ...

@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=63.0.0",
+    "setuptools>=64.0.0",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
@@ -30,8 +30,8 @@ repository = "https://github.com/zackxzhang/gpie"
 
 [tool.setuptools]
 include-package-data = false
-packages.find.include = ["gpie*"]
-packages.find.exclude = ["examples*", "tests*"]
+packages.find.include = ["gpie"]
+packages.find.exclude = ["examples", "tests"]
 
 [tool.setuptools.dynamic]
 version = {attr = "gpie.__version__"}
