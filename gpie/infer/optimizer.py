@@ -21,7 +21,6 @@ class GradientDescentOptimizer(Optimizer):
     def __init__(self, bounds: Bounds, x0: ndarray, n_restarts: int = 0,
                  solver: str = 'l-bfgs-b', backend='scipy'):
 
-        super().__init__()
         # configuration
         self.backend = backend
         # search space
@@ -133,7 +132,7 @@ class GradientDescentOptimizer(Optimizer):
 
         self._restart()
 
-        # FIXME: parallelize
+        # TODO: parallelize
         results = [self._min(fun, jac, x0) for x0 in self.X0]
 
         b = np.array([res['success'] for res in results])

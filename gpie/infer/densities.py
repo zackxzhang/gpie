@@ -26,7 +26,6 @@ class AsymmetricMixin:
 class LogDensity(AsymmetricMixin, Density):
 
     def __init__(self, log_density: Callable, n_variates: int):
-        super().__init__()
         self.log_dst = log_density
         self.n_variates = n_variates
 
@@ -42,7 +41,6 @@ class LogDensity(AsymmetricMixin, Density):
             raise AttributeError('n_variates has to be a positive integer.')
 
     def __call__(self, x: ndarray):
-        super().__call__(x)
         return self.log_dst(x)
 
 
@@ -53,7 +51,6 @@ class Dirac(SymmetricMixin, Distribution):
     """
 
     def __init__(self, mu: ndarray = np.zeros(1)):
-        super().__init__()
         self.mu = mu
 
     def __repr__(self):
@@ -91,6 +88,7 @@ class Flat(SymmetricMixin, Density):
     def __str__(self):
         return 'flat prior'
 
+    @property
     def n_variates(self) -> int:
         return 0
 
@@ -109,7 +107,6 @@ class Gaussian(SymmetricMixin, Distribution):
 
     def __init__(self, mu: ndarray = np.zeros(1),
                  cov: ndarray = np.eye(1), **kwargs):
-        super().__init__()
         self.parametrise(mu=mu, cov=cov, **kwargs)
 
     def __repr__(self):
@@ -158,7 +155,6 @@ class Uniform(SymmetricMixin, Distribution):
     """ independent(!) multivariate uniform density """
 
     def __init__(self, a: ndarray = np.zeros(1), b: ndarray = np.ones(1)):
-        super().__init__()
         self.parametrise(a=a, b=b)
 
     def __repr__(self):

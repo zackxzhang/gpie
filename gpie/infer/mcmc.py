@@ -15,7 +15,6 @@ class MarkovChainSampler(Sampler):
 
     def __init__(self, log_p: Density, q: Density, x0: ndarray,
                  n_samples: int, n_burns: int, n_restarts: int):
-        super().__init__()
         self.log_p = log_p
         self.q = q
         self.X0 = x0
@@ -94,7 +93,7 @@ class MarkovChainSampler(Sampler):
         if self.n_restarts == 0:
             return False
         X = np.random.normal(0., 1., size=(self.n_restarts, self.X0.shape[1]))
-        # FIXME: perturb user-provided x0 by multiplication with random noise
+        # TODO: perturb user-provided x0 by multiplication with random noise
         # np.einsum('ij,j->ij', X, self.X0[0])
         # but consider the case with multiple x0's
         self.X0 = np.vstack([self.X0, X])
@@ -128,7 +127,7 @@ class MarkovChainMonteCarloSampler(MarkovChainSampler):
         chain = np.zeros((self.n_samples, len(x)))
         # Metropolis–Hastings
         for i in range(-self.n_burns, self.n_samples):
-            x_star, accept = self.q.propose(x)  # FIXME: handle bounds
+            x_star, accept = self.q.propose(x)  # TODO: handle bounds
             accept += self.log_p(x_star) - self.log_p(x)
             if log_u[i] < accept: # accept
                 x = x_star

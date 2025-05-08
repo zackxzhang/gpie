@@ -47,7 +47,6 @@ class Kernel(Model):
         """
 
     @abstractmethod
-    @audit_X
     def _obj(self, X: ndarray) -> Callable:
         """
         make a objective function
@@ -62,7 +61,6 @@ class Kernel(Model):
         """
 
     @abstractmethod
-    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
         """
         compute kernel K(X, Z)
@@ -153,8 +151,8 @@ class Sum(Kernel):
         self.k1._set(log_params[:self.b])
         self.k2._set(log_params[self.b:])
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
-        super()._obj(X)
         f1 = self.k1._obj(X)
         f2 = self.k2._obj(X)
 
@@ -166,6 +164,7 @@ class Sum(Kernel):
 
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray):
         return self.k1(X, Z) + self.k2(X, Z)
 
@@ -211,8 +210,8 @@ class Product(Kernel):
         self.k1._set(log_params[:self.b])
         self.k2._set(log_params[self.b:])
 
+    @audit_X
     def _obj(self, X: ndarray):
-        super()._obj(X)
         f1 = self.k1._obj(X)
         f2 = self.k2._obj(X)
 
@@ -224,6 +223,7 @@ class Product(Kernel):
 
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray):
         return self.k1(X, Z) * self.k2(X, Z)
 
@@ -263,8 +263,8 @@ class Power(Kernel):
     def _set(self, log_params: ndarray):
         self.k._set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray):
-        super()._obj(X)
         f = self.k._obj(X)
 
         def fun(log_params: ndarray):
@@ -273,6 +273,7 @@ class Power(Kernel):
 
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray):
         return self.k(X, Z) ** self.e
 
@@ -316,8 +317,8 @@ class KroneckerSum(Kernel):
         self.k1._set(log_params[:self.b])
         self.k2._set(log_params[self.b:])
 
+    @audit_X
     def _obj(self, X: ndarray):
-        super()._obj(X)
         X1 = X[:, :self.b]
         X2 = X[:, self.b:]
         f1 = self.k1._obj(X1)
@@ -372,8 +373,8 @@ class KroneckerProduct(Kernel):
         self.k1._set(log_params[:self.b])
         self.k2._set(log_params[self.b:])
 
+    @audit_X
     def _obj(self, X: ndarray):
-        super()._obj(X)
         X1 = X[:, :self.b]
         X2 = X[:, self.b:]
         f1 = self.k1._obj(X1)
@@ -468,8 +469,8 @@ class ConstantKernel(StationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
-        super()._obj(X)
         U = np.ones((X.shape[0], X.shape[0]))
         def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
             assert is_array(log_params, 1, np.number)
@@ -479,8 +480,8 @@ class ConstantKernel(StationaryMixin, Kernel):
             return K, d_K_d_loga
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
-        super().__call__(X, Z)
         return self.a * np.ones((X.shape[0], Z.shape[0]))
 
 
@@ -512,8 +513,8 @@ class WhiteKernel(StationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
-        super()._obj(X)
         same = np.isclose(dist(X, X, 'sqeuclidean'), 0.)
         K = np.where(same, 1., 0.)
         dK = np.empty((X.shape[0], X.shape[0], 0))
@@ -522,8 +523,8 @@ class WhiteKernel(StationaryMixin, Kernel):
             return K, dK
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray):
-        super().__call__(X, Z)
         same = np.isclose(dist(X, Z, 'sqeuclidean'), 0.)
         return np.where(same, 1., 0.)
 
@@ -538,7 +539,6 @@ class RBFKernel(StationaryMixin, Kernel):
     """
 
     def __init__(self, l: V = 1.0, l_bounds: B = (1e-4, 1e+4)):
-        super().__init__()
         check_positive_scalar_array(l, 'length scale')
         self._thetas = Thetas.from_seq((l,), (l_bounds,), log)
 
@@ -574,8 +574,8 @@ class RBFKernel(StationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
-        super()._obj(X)
         if self.isotropic:
             """ precompute reusable result """
             # pairwise l2 distance squared
@@ -614,9 +614,9 @@ class RBFKernel(StationaryMixin, Kernel):
                 return K, d_K_d_logl
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
         """ kernel for readability """
-        super().__call__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
             l = self.l * np.ones((k,))
@@ -696,8 +696,8 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
-        super()._obj(X)
         if self.isotropic:
             R2 = dist(X, X, metric='sqeuclidean')
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
@@ -737,8 +737,8 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
                 return K, np.dstack((d_K_d_logm, d_K_d_logl))
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
-        super().__call__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
             l = self.l * np.ones((k,))
@@ -770,7 +770,6 @@ class MaternKernel(StationaryMixin, Kernel):
     """
 
     def __init__(self, d: int = 5, l: float = 1.0, l_bounds: B = (1e-4, 1e+4)):
-        super().__init__()
         check_positive_scalar_array(l, 'length scale')
         if d == 1:
             self._f = lambda t: 1.
@@ -832,8 +831,8 @@ class MaternKernel(StationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
-        super()._obj(X)
         d = self.d
         f = self.f
         g = self.g
@@ -879,8 +878,8 @@ class MaternKernel(StationaryMixin, Kernel):
                 return K, d_K_d_logl
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
-        super().__call__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
             l = self.l * np.ones((k,))
@@ -960,6 +959,7 @@ class PeriodicKernel(StationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
         if self.isotropic:
             def fun(log_params)-> Tuple[ndarray, ndarray]:
@@ -1009,8 +1009,8 @@ class PeriodicKernel(StationaryMixin, Kernel):
                 return K, np.dstack((d_K_d_logp, d_K_d_logl))
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
-        super().__init__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
             l = self.l * np.ones((k,))
@@ -1073,6 +1073,7 @@ class CosineKernel(StationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
         k = X.shape[1]  # number of features
         masks = np.full((k, k), True, dtype=bool)
@@ -1116,8 +1117,8 @@ class CosineKernel(StationaryMixin, Kernel):
                 return K, d_K_d_logp
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
-        super().__call__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
             p = self.p * np.ones((k,))
@@ -1199,6 +1200,7 @@ class SpectralKernel(StationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
         if self.isotropic:
             R2 = dist(X, X, metric='sqeuclidean')
@@ -1246,8 +1248,8 @@ class SpectralKernel(StationaryMixin, Kernel):
                 return K, np.dstack((d_K_d_logu, d_K_d_logv))
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
-        super().__call__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
             u = self.u * np.ones((k,))
@@ -1279,7 +1281,6 @@ class LinearKernel(NonStationaryMixin, Kernel):
     """
 
     def __init__(self, l: V = 1.0, l_bounds: B = (1e-4, 1e+4)):
-        super().__init__()
         check_positive_scalar_array(l, 'length scale')
         self._thetas = Thetas.from_seq((l,), (l_bounds,), log)
         # mimic spectral kernel's structure
@@ -1316,6 +1317,7 @@ class LinearKernel(NonStationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
         if self.isotropic:
             # pairwise dot product
@@ -1347,8 +1349,8 @@ class LinearKernel(NonStationaryMixin, Kernel):
                 return K, d_K_d_logl
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
-        super().__call__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
             l = self.l * np.ones((k,))
@@ -1417,8 +1419,8 @@ class NeuralKernel(NonStationaryMixin, Kernel):
     def _set(self, log_params: ndarray):
         self._thetas.set(log_params)
 
+    @audit_X
     def _obj(self, X: ndarray) -> Callable:
-        super()._obj(X)
         if self.isotropic:
             # pairwise dot product
             X2 = np.einsum('ik,jk->ij', X, X)
@@ -1477,8 +1479,8 @@ class NeuralKernel(NonStationaryMixin, Kernel):
                 return K, np.dstack((d_K_d_logc, d_K_d_logl))
         return fun
 
+    @audit_X_Z
     def __call__(self, X: ndarray, Z: ndarray) -> ndarray:
-        super().__call__(X, Z)
         k = X.shape[1]  # number of features
         if self.isotropic:
             l = self.l * np.ones((k,))

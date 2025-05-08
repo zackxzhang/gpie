@@ -33,8 +33,6 @@ class BayesianOptimizer(Optimizer):
                  surrogate: Surrogate = GaussianProcessRegressor(),
                  acquisition: str = 'ei', solver: str = 'l-bfgs-b'):
 
-        super().__init__()
-
         if isinstance(surrogate, surrogates):
             self._surrogate = surrogate
         else:
@@ -160,6 +158,7 @@ class BayesianOptimizer(Optimizer):
 
     def minimize(self, verbose: bool = False,
                  callback: Optional[Callable] = None) -> dict:
+
         genesis = time()
 
         self._fit()
