@@ -311,11 +311,11 @@ class tProcessRegressor(BayesianSupervisedModel):
     def _set(self, kparams: ndarray):
         self.kernel._set(kparams)
 
-    def _obj(self, X: ndarray, y: ndarray) -> Callable:  # FIXME
-        ...
+    def _obj(self, X: ndarray, y: ndarray) -> Callable:
+        raise NotImplementedError
 
-    def _acq(self, acquisition: str) -> Callable:  # FIXME
-        ...
+    def _acq(self, acquisition: str) -> Callable:
+        raise NotImplementedError
 
     def config(self, x0: Optional[ndarray] = None,
                n_restarts: Optional[int] = None):

@@ -6,11 +6,13 @@ import unittest
 from math import exp, sqrt, pi, sin
 from scipy.optimize import check_grad, approx_fprime              # type: ignore
 from gpie.base import Bounds
-from gpie.kernel import ConstantKernel, WhiteKernel, RBFKernel,          \
-    RationalQuadraticKernel, MaternKernel, PeriodicKernel, CosineKernel, \
-    SpectralKernel, LinearKernel, NeuralKernel,   \
+from gpie.kernel import (
+    ConstantKernel, WhiteKernel, RBFKernel,
+    RationalQuadraticKernel, MaternKernel,
+    PeriodicKernel, CosineKernel, SpectralKernel,
+    LinearKernel, NeuralKernel,
     GaussianProcessRegressor, BayesianOptimizer
-
+)
 
 def beale(x1_x2) -> float:
     """

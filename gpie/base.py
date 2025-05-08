@@ -452,7 +452,7 @@ class Optimizer(ABC):
         """ initialize optimizer object """
 
     @abstractmethod
-    def minimize(self):
+    def minimize(self, *args, **kwargs):
         """ main routine """
 
 
