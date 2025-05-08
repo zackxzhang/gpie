@@ -22,8 +22,10 @@ def verify_kernel_operands(kernel_operator):
         elif isinstance(operand, float) and operand > 0.:
             return kernel_operator(self, ConstantKernel(operand))
         else:
-            raise ValueError('a kernel operator accepts either two kernels '
-                             'or a positive float and a kernel as operands.')
+            raise ValueError(
+                'a kernel operator accepts either two kernels '
+                'or a positive float and a kernel as operands.'
+            )
     return wrapped_kernel_operator
 
 
@@ -86,8 +88,10 @@ class Kernel(Model):
         if isinstance(exponent, (int, float)):
             return Power(self, exponent)
         else:
-            raise ValueError('kernel exponentiation only accepts '
-                             'an integer or a float as exponent')
+            raise ValueError(
+                'kernel exponentiation only accepts '
+                'an integer or a float as exponent'
+            )
 
     @verify_kernel_operands
     def __or__(self, other):
@@ -122,7 +126,7 @@ class Sum(Kernel):
         return self.__str__()
 
     def __str__(self):
-        return '{k1} + {k2}'.format(k1=self.k1, k2=self.k2)
+        return f'{self.k1} + {self.k2}'
 
     @property
     def k1(self) -> Kernel:
@@ -181,7 +185,7 @@ class Product(Kernel):
         return self.__str__()
 
     def __str__(self):
-        return '{k1} * {k2}'.format(k1=self.k1, k2=self.k2)
+        return f'{self.k1} * {self.k2}'
 
     @property
     def k1(self):
@@ -239,7 +243,7 @@ class Power(Kernel):
         return self.__str__()
 
     def __str__(self):
-        return '({k} ** {e:.3g})'.format(k=self.k, e=self.e)
+        return f'({self.k} ** {self.e:.3g})'
 
     @property
     def k(self):
@@ -291,7 +295,7 @@ class KroneckerSum(Kernel):
         return self.__str__()
 
     def __str__(self):
-        return '({k1} ⊕ {k2})'.format(k1=self.k1, k2=self.k2)
+        return f'({self.k1} ⊕ {self.k2})'
 
     @property
     def k1(self):
@@ -347,7 +351,7 @@ class KroneckerProduct(Kernel):
         return self.__str__()
 
     def __str__(self):
-        return '({k1} ⊗ {k2})'.format(k1=self.k1, k2=self.k2)
+        return f'({self.k1} ⊗ {self.k2})'
 
     @property
     def k1(self):
@@ -404,7 +408,7 @@ class NonStationaryMixin:
 
 
 scalar_formatter = '{0:.3g}'.format
-array_formatter = lambda x: '[{}]'.format(', '.join(map(scalar_formatter, x)))
+array_formatter = lambda x: '[' + ', '.join(map(scalar_formatter, x)) + ']'
 
 
 def formatter(x: V):
@@ -413,26 +417,26 @@ def formatter(x: V):
     elif isinstance(x, ndarray):
         return array_formatter(x)
     else:
-        raise TypeError('unrecognized input for formatter: {}'.format(x))
+        raise TypeError(f'unrecognized input for formatter: {x}')
 
 
 def check_positive_scalar(x: float, name='amplitude'):
     if isinstance(x, float):
         if x <= 0:
-            raise ValueError('{} must be positive.'.format(name))
+            raise ValueError(f'{name} must be positive.')
     else:
-        raise TypeError('{} must be a float.'.format(name))
+        raise TypeError(f'{name} must be a float.')
 
 
 def check_positive_scalar_array(x: V, name='length scale'):
     if isinstance(x, float):
         if x <= 0:
-            raise ValueError('{} must be positive.'.format(name))
+            raise ValueError(f'{name} must be positive.')
     elif isinstance(x, ndarray):
         if np.any(x <= 0.):
-            raise ValueError('{} must be positive.'.format(name))
+            raise ValueError(f'{name} must be positive.')
     else:
-        raise TypeError('{} must be a float or an array.'.format(name))
+        raise TypeError(f'{name} must be a float or an array.')
 
 
 class ConstantKernel(StationaryMixin, Kernel):
@@ -452,7 +456,7 @@ class ConstantKernel(StationaryMixin, Kernel):
         return self.__str__()
 
     def __str__(self):
-        return '{}**2'.format(formatter(sqrt(self.a)))
+        return f'{formatter(sqrt(self.a))}**2'
 
     @property
     def thetas(self):
@@ -547,7 +551,7 @@ class RBFKernel(StationaryMixin, Kernel):
 
     def __str__(self):
         l = formatter(self.l)
-        return 'RBFKernel(l={})'.format(l)
+        return f'RBFKernel(l={l})'
 
     @property
     def thetas(self):
@@ -595,8 +599,10 @@ class RBFKernel(StationaryMixin, Kernel):
         else:
             """ check dimensions """
             if len(self.l) != X.shape[1]:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
                 """ kernel and jacobian carefully engineered for efficiency """
                 assert is_array(log_params, 1, np.number)
@@ -622,8 +628,10 @@ class RBFKernel(StationaryMixin, Kernel):
             l = self.l * np.ones((k,))
         else:
             if len(self.l) != k:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             l = self.l
         X_l = np.einsum('ij,j->ij', X, 1./l)
         Z_l = np.einsum('ij,j->ij', Z, 1./l)
@@ -664,7 +672,7 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
     def __str__(self):
         m = formatter(self.m)
         l = formatter(self.l)
-        return 'RationalQuadraticKernel(m={}, l={})'.format(m, l)
+        return f'RationalQuadraticKernel(m={m}, l={l})'
 
     @property
     def thetas(self):
@@ -672,8 +680,10 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
 
     @property
     def hyperparameters(self):
-        return {'mixture coefficient': self.m,
-                'length scale': self.l}
+        return {
+            'mixture coefficient': self.m,
+            'length scale': self.l
+        }
 
     @property
     def isotropic(self):
@@ -716,8 +726,10 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
                 return K, np.dstack((d_K_d_logm, d_K_d_logl))
         else:
             if len(self.l) != X.shape[1]:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # length scale
@@ -744,8 +756,10 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
             l = self.l * np.ones((k,))
         else:
             if len(self.l) != k:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             l = self.l
         X_sqrt2ml = np.einsum('ij,j->ij', X, 1./(sqrt(2*self.m)*l))
         Z_sqrt2ml = np.einsum('ij,j->ij', Z, 1./(sqrt(2*self.m)*l))
@@ -781,8 +795,10 @@ class MaternKernel(StationaryMixin, Kernel):
             self._f = lambda t: 1. + t + 1./3. * t**2
             self._g = lambda t: 1./3. * t * (t + 1.)
         else:
-            raise ValueError('only 1, 3, 5 are supported for Bessel order'
-                             ' because others are difficult to evaluate.'  )
+            raise ValueError(
+                'only 1, 3, 5 are supported for Bessel order '
+                'because others are difficult to evaluate.'
+            )
         self._d = d
         self._thetas = Thetas.from_seq((l,), (l_bounds,), log)
 
@@ -792,7 +808,7 @@ class MaternKernel(StationaryMixin, Kernel):
     def __str__(self):
         d = Fraction(self.d, 2)
         l = formatter(self.l)
-        return 'MatérnKernel(d={}, l={})'.format(d, l)
+        return f'MatérnKernel(d={d}, l={l})'
 
     @property
     def thetas(self):
@@ -885,8 +901,10 @@ class MaternKernel(StationaryMixin, Kernel):
             l = self.l * np.ones((k,))
         else:
             if len(self.l) != k:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             l = self.l
         sqrtdX_l = np.einsum('ij,j->ij', X, sqrt(self.d)/l)
         sqrtdZ_l = np.einsum('ij,j->ij', Z, sqrt(self.d)/l)
@@ -921,7 +939,7 @@ class PeriodicKernel(StationaryMixin, Kernel):
     def __str__(self):
         p = formatter(self.p)
         l = formatter(self.l)
-        return 'PeriodicKernel(p={}, l={})'.format(p, l)
+        return f'PeriodicKernel(p={p}, l={l})'
 
     @property
     def thetas(self):
@@ -984,8 +1002,10 @@ class PeriodicKernel(StationaryMixin, Kernel):
         else:
             """ check dimensions """
             if len(self.p) != X.shape[1]:
-                raise ValueError( 'number of features must agree with '
-                                  'number of periods / length scales.'  )
+                raise ValueError(
+                    'number of features must agree with '
+                    'number of periods / length scales.'
+                )
             dim = self.dim
             def fun(log_params)-> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
@@ -1017,8 +1037,10 @@ class PeriodicKernel(StationaryMixin, Kernel):
             p = self.p * np.ones((k,))
         else:
             if len(self.p) != k:
-                raise ValueError( 'number of features must agree with '
-                                  'number of periods / length scales.'  )
+                raise ValueError(
+                    'number of features must agree with '
+                    'number of periods / length scales.'
+                )
             l = self.l
             p = self.p
         X_p = np.einsum('ij,j->ij', X, pi / p)
@@ -1046,7 +1068,8 @@ class CosineKernel(StationaryMixin, Kernel):
         return self.__str__()
 
     def __str__(self):
-        return 'CosineKernel(p={})'.format(formatter(self.p))
+        p = formatter(self.p)
+        return f'CosineKernel(p={p})'
 
     @property
     def thetas(self):
@@ -1097,8 +1120,10 @@ class CosineKernel(StationaryMixin, Kernel):
                 return K, d_K_d_logp.sum(axis=2, keepdims=True)
         else:
             if len(self.p) != X.shape[1]:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period
@@ -1124,8 +1149,10 @@ class CosineKernel(StationaryMixin, Kernel):
             p = self.p * np.ones((k,))
         else:
             if len(self.p) != k:
-                raise ValueError( 'number of features must agree '
-                                  'with number of periods.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of periods.'
+                )
             p = self.p
         X_p = np.einsum('ij,j->ij', X, 2 * pi / p)
         Z_p = np.einsum('ij,j->ij', Z, 2 * pi / p)
@@ -1162,7 +1189,7 @@ class SpectralKernel(StationaryMixin, Kernel):
     def __str__(self):
         u = formatter(self.u)
         v = formatter(self.v)
-        return 'SpectralKernel(u={}, v={})'.format(u, v)
+        return f'SpectralKernel(u={u}, v={v})'
 
     @property
     def thetas(self):
@@ -1256,8 +1283,10 @@ class SpectralKernel(StationaryMixin, Kernel):
             v = self.v * np.ones((k,))
         else:
             if len(self.u) != k:
-                raise ValueError( 'number of features must agree '
-                                  'with number of means / sds.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of means / sds.'
+                )
             u = self.u
             v = self.v
         Xv = np.einsum('ij,j->ij', X, v)
@@ -1290,7 +1319,7 @@ class LinearKernel(NonStationaryMixin, Kernel):
 
     def __str__(self):
         l = formatter(self.l)
-        return 'LinearKernel(l={})'.format(l)
+        return f'LinearKernel(l={l})'
 
     @property
     def thetas(self):
@@ -1333,8 +1362,10 @@ class LinearKernel(NonStationaryMixin, Kernel):
                 return K, d_K_d_logl
         else:
             if len(self.l) != X.shape[1]:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # length scale
@@ -1356,8 +1387,10 @@ class LinearKernel(NonStationaryMixin, Kernel):
             l = self.l * np.ones((k,))
         else:
             if len(self.l) != k:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             l = self.l
         X_l = np.einsum('ij,j->ij', X, 1./l)
         Z_l = np.einsum('ij,j->ij', Z, 1./l)
@@ -1388,7 +1421,7 @@ class NeuralKernel(NonStationaryMixin, Kernel):
     def __str__(self):
         c = formatter(self.c)
         l = formatter(self.l)
-        return 'NeuralKernel(c={}, l={})'.format(c, l)
+        return f'NeuralKernel(c={c}, l={l})'
 
     @property
     def thetas(self):
@@ -1486,8 +1519,10 @@ class NeuralKernel(NonStationaryMixin, Kernel):
             l = self.l * np.ones((k,))
         else:
             if len(self.l) != k:
-                raise ValueError( 'number of features must agree '
-                                  'with number of length scales.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of length scales.'
+                )
             l = self.l
         X_l = np.einsum('ij,j->ij', X, 1./l)
         Z_l = np.einsum('ij,j->ij', Z, 1./l)

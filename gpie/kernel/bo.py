@@ -5,7 +5,7 @@ import numpy as np                                                # type: ignore
 import warnings
 from time import time
 from numpy import ndarray                                         # type: ignore
-from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Callable, Optional, Sequence, Tuple, Union
 from .gp import GaussianProcessRegressor, tProcessRegressor
 from ..base import Bounds, Optimizer
 from ..infer import GradientDescentOptimizer
@@ -41,14 +41,14 @@ class BayesianOptimizer(Optimizer):
         if acquisition in self.acquisitions:
             self._acquisition = acquisition
         else:
-            raise ValueError( 'acquisition must be in {}.' \
-                              .format(self.acquisitions)  )
+            raise ValueError(f'acquisition must be in {self.acquisitions}.')
 
         if solver in self.solvers:
-            self._optimizer = GradientDescentOptimizer(solver=solver, x0=x0,
-                                                       bounds=bounds)
+            self._optimizer = GradientDescentOptimizer(
+                solver=solver, x0=x0, bounds=bounds
+            )
         else:
-            raise ValueError('solver must be in {}.'.format(self.solvers))
+            raise ValueError(f'solver must be in {self.solvers}.')
 
         self._X = self.optimizer.X0
 
@@ -57,8 +57,10 @@ class BayesianOptimizer(Optimizer):
         elif is_array(y0, 1, np.number) and y0.shape[0] == x0.shape[0]:
             self._y = y0
         else:
-            raise ValueError( 'y0 is either None or a 1d numeric array '
-                              'that agree with x0 on 1st dimension.'    )
+            raise ValueError(
+                'y0 is either None or a 1d numeric array '
+                'that agree with x0 on 1st dimension.'
+            )
 
         if callable(fun):
             self._fun = fun
@@ -142,9 +144,11 @@ class BayesianOptimizer(Optimizer):
             # b) aquisition minimizer is a duplicate
             warnings.warn('turn to pure exploration.')
             if not success:
-                x = np.random.uniform(low=self.bounds.lowers,
-                                      high=self.bounds.uppers,
-                                      size=(len(self.bounds,)))
+                x = np.random.uniform(
+                    low=self.bounds.lowers,
+                    high=self.bounds.uppers,
+                    size=(len(self.bounds),),
+                )
         # query
         y = self.fun(x)
         # reshape
