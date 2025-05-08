@@ -7,7 +7,7 @@ import warnings
 from functools import partial
 from multiprocessing import Pool
 from numpy import ndarray
-from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Callable, Optional, Sequence, Tuple, Union
 from ..base import Optimizer, Bounds, OPT_BACKENDS
 
 
@@ -46,8 +46,7 @@ class GradientDescentOptimizer(Optimizer):
         if backend == 'scipy':
             self._backend = backend
         else:
-            raise ValueError('backend must be one of {}'
-                             .format(OPT_BACKENDS.keys()))
+            raise ValueError(f'backend must be one of {OPT_BACKENDS.keys()}')
 
     @property
     def bounds(self):
@@ -71,7 +70,7 @@ class GradientDescentOptimizer(Optimizer):
         X0 = np.atleast_2d(x0)
         for x in X0:
             if not self.bounds.contains(x):
-                raise ValueError('x0 {} is outside bounds.'.format(x))
+                raise ValueError(f'x0 {x} is outside bounds.')
         self._X0 = X0
 
     @property
@@ -84,8 +83,10 @@ class GradientDescentOptimizer(Optimizer):
             raise TypeError('n_restarts must be an integer.')
         if self.X0 is None:
             if n_restarts <= 0:
-                raise ValueError( 'n_restarts must be a positive integer ' \
-                                  'when x0 is not provided.' )
+                raise ValueError(
+                    'n_restarts must be a positive integer '
+                    'when x0 is not provided.'
+                )
         else:
             if n_restarts < 0:
                 raise ValueError('n_restarts must be a nonnegative integer.')
@@ -144,13 +145,17 @@ class GradientDescentOptimizer(Optimizer):
         if verbose:
             return {'success': b, 'f': y, 'x': X}
         if np.any(b):
-            return {'success': True,
-                    'f': y[b].min(),
-                    'x': X[b][y[b].argmin()]}
+            return {
+                'success': True,
+                'f': y[b].min(),
+                'x': X[b][y[b].argmin()],
+            }
         else:
-            return {'success': False,
-                    'f': y.min(),
-                    'x': X[y.argmin()]}
+            return {
+                'success': False,
+                'f': y.min(),
+                'x': X[y.argmin()],
+            }
 
     def maximize(self, fun: Callable, jac: Union[Callable, bool],
                  verbose: bool = False,
@@ -183,10 +188,14 @@ class GradientDescentOptimizer(Optimizer):
         if verbose:
             return {'success': b, 'f': -y, 'x': X}
         if np.any(b):
-            return {'success': True,
-                    'f': -y[b].min(),
-                    'x': X[b][y[b].argmin()]}
+            return {
+                'success': True,
+                'f': -y[b].min(),
+                'x': X[b][y[b].argmin()],
+            }
         else:
-            return {'success': False,
-                    'f': -y.min(),
-                    'x': X[y.argmin()]}
+            return {
+                'success': False,
+                'f': -y.min(),
+                'x': X[y.argmin()],
+            }

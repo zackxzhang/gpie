@@ -135,7 +135,7 @@ class Bounds:
         return self.__str__()
 
     def __str__(self):
-        return 'Bounds(lowers={}, uppers={}'.format(self.lowers, self.uppers)
+        return f'Bounds(lowers={self.lowers}, uppers={self.uppers}'
 
     def __len__(self):
         return self.lowers.shape[0]
@@ -173,7 +173,7 @@ class Bounds:
         if backend == 'scipy':
             return sp.optimize.Bounds(self.lowers, self.uppers)
         else:
-            raise ValueError('backend must be one of {}'.format(OPT_BACKENDS))
+            raise ValueError(f'backend must be one of {OPT_BACKENDS}')
 
     @classmethod
     def from_seq(cls, bounds: Sequence[B], transform: Callable = lambda x: x):
@@ -199,7 +199,7 @@ class Thetas:
         return self.__str__()
 
     def __str__(self):
-        return 'Thetas(values={}, bounds={})'.format(self.values, self.bounds)
+        return f'Thetas(values={self.values}, bounds={self.bounds})'
 
     def __len__(self):
         return self.values.shape[0]
@@ -240,8 +240,10 @@ class Thetas:
         if not self.bounds.contains(values):
             print('values', values)
             print('bounds', self.bounds)
-            raise ValueError( 'lower bounds must not exceed upper bounds and '
-                              'each value must obey its lowers/upper bounds.'  )
+            raise ValueError(
+                'lower bounds must not exceed upper bounds and '
+                'each value must obey its lowers/upper bounds.'
+            )
         self._values = values
 
     def assigned(self) -> bool:
@@ -275,9 +277,10 @@ class Hypers:
         return self.__str__()
 
     def __str__(self):
-        out = ['{name}={value:.3g}'.format(name=name, value=value)
-               for name, value in zip(self.names.flat, self.values.flat)]
-        return ', '.join(out)
+        return ', '.join([
+            f'{name}={value:.3g}'
+            for name, value in zip(self.names.flat, self.values.flat)
+        ])
 
     def __add__(self, other):
         if not isinstance(other, Hypers):
@@ -390,8 +393,10 @@ class BayesianSupervisedModel(SupervisedModel):
         # TODO: check if thetas has prior distributions or just a point value
         # implement UninformedPrior class that always returns 1 as density
         if self.fitted():
-            raise AttributeError('model already fitted. please refer to model '
-                                 'init stage when hyper prior is set by user.' )
+            raise AttributeError(
+                'model already fitted. please refer to model '
+                'init stage when hyper prior is set by user.'
+            )
         # compute hyper prior
 
     @abstractmethod

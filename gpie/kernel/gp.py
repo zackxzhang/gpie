@@ -9,7 +9,7 @@ from numpy import ndarray
 from scipy.linalg import cho_solve, cholesky                      # type: ignore
 from scipy.stats import norm, t                                   # type: ignore
 from scipy.special import gamma                                   # type: ignore
-from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Callable, Optional, Sequence, Tuple, Union
 from ..base import BayesianSupervisedModel, Thetas, Density
 from ..infer import (
     Dirac, Gaussian, Student, LogDensity,
@@ -40,21 +40,22 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         if inference in self.inferences:
             self._inference = inference
         else:
-            raise ValueError('inference must be in {}.'.format(self.inferences))
+            raise ValueError(f'inference must be in {self.inferences}.')
 
         if solver in self.solvers:
-            self._optimizer = \
-                GradientDescentOptimizer(solver=solver,
-                                         bounds=kernel.thetas.bounds,
-                                         x0=kernel.thetas.values)
+            self._optimizer = GradientDescentOptimizer(
+                solver=solver,
+                bounds=kernel.thetas.bounds,
+                x0=kernel.thetas.values
+            )
         else:
-            raise ValueError('solver must be in {}.'.format(self.solvers))
+            raise ValueError(f'solver must be in {self.solvers}.')
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return 'GaussianProcessRegressor(kernel={})'.format(self.kernel)
+        return f'GaussianProcessRegressor(kernel={self.kernel})'
 
     @property
     def kernel(self):
@@ -151,8 +152,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         elif acquisition == 'lcb':
             return fun_lcb
         else:
-            raise ValueError('acquisition must be in {}.'\
-                             .format(self.aquisitions))
+            raise ValueError(f'acquisition must be in {self.aquisitions}.')
 
     def config(self, x0: Optional[ndarray] = None,
                n_restarts: Optional[int] = None):
@@ -177,9 +177,11 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         if n_samples <= 0:
             return hyper_posterior
         else:
-            sampler = MarkovChainMonteCarloSampler(hyper_posterior,
-                          Gaussian(np.zeros(k), np.eye(k)),
-                          self.thetas.values, n_samples, **kwargs)
+            sampler = MarkovChainMonteCarloSampler(
+                hyper_posterior,
+                Gaussian(np.zeros(k), np.eye(k)),
+                self.thetas.values, n_samples, **kwargs
+            )
             return sampler.sample()
         # only support flat hyperprior θ for now
 
@@ -189,8 +191,10 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         result = self.optimizer.maximize(self._obj(self.X, self.y), True)
         success, log_mll, kparams = (result[k] for k in ['success', 'f', 'x'])
         if not success:
-            warnings.warn( 'optimzation fails. try changing x0 or bounds, '
-                           'or increasing number of restarts.' )
+            warnings.warn(
+                'optimzation fails. try changing x0 or bounds, '
+                'or increasing number of restarts.'
+            )
         self._set(kparams)
         self.log_mll = log_mll
         # precompute for prediction
@@ -226,8 +230,10 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         mu = np.einsum('ij,j->i', Kzx, self.dual_weights)
         cov = Kzz - Kzx @ cho_solve((self.L, True), Kzx.T)
         # if np.any(cov < 0.):
-        #     warnings.warn('posterior covariance has negative elements. '
-        #                   'possibly numerical issues - correcting to 0.')
+        #     warnings.warn(
+        #         'posterior covariance has negative elements. '
+        #         'possibly numerical issues - correcting to 0.'
+        #     )
         # cov[cov < 0.] = 0.
         posterior = Gaussian(mu, cov, allow_singular=True)
         if n_samples <= 0:
@@ -254,8 +260,10 @@ class tProcessRegressor(BayesianSupervisedModel):
         if isinstance(nu, int) and nu > 0:
             self._nu = nu
         else:
-            raise ValueError( 'only positive integers are supported for nu, '
-                              'i.e. degree of freedom for t distribution.'    )
+            raise ValueError(
+                'only positive integers are supported for nu, '
+                'i.e. degree of freedom for t distribution.'
+            )
 
         if isinstance(kernel, Kernel):
             self._kernel = kernel
@@ -265,21 +273,22 @@ class tProcessRegressor(BayesianSupervisedModel):
         if inference in self.inferences:
             self._inference = inference
         else:
-            raise ValueError('inference must be in {}.'.format(self.inferences))
+            raise ValueError(f'inference must be in {self.inferences}.')
 
         if solver in self.solvers:
-            self._optimizer = \
-                GradientDescentOptimizer(solver=solver,
-                                         bounds=kernel.thetas.bounds,
-                                         x0=kernel.thetas.values)
+            self._optimizer = GradientDescentOptimizer(
+                solver=solver,
+                bounds=kernel.thetas.bounds,
+                x0=kernel.thetas.values
+            )
         else:
-            raise ValueError('solver must be in {}.'.format(self.solvers))
+            raise ValueError(f'solver must be in {self.solvers}.')
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return 'tProcessRegressor(nu={}, kernel={})'.format(self.nu, self.kernel)
+        return f'tProcessRegressor(nu={self.nu}, kernel={self.kernel})'
 
     @property
     def nu(self):
@@ -340,9 +349,11 @@ class tProcessRegressor(BayesianSupervisedModel):
         if n_samples <= 0:
             return hyper_posterior
         else:
-            sampler = MarkovChainMonteCarloSampler(hyper_posterior,
-                          Gaussian(np.zeros(k), np.eye(k)),
-                          self.thetas.values, n_samples, **kwargs)
+            sampler = MarkovChainMonteCarloSampler(
+                hyper_posterior,
+                Gaussian(np.zeros(k), np.eye(k)),
+                self.thetas.values, n_samples, **kwargs
+            )
             return sampler.sample()
         # only support flat hyperprior θ for now
 

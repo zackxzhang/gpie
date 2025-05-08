@@ -5,7 +5,7 @@ import numpy as np                                                # type: ignore
 from abc import ABC, abstractmethod
 from multiprocessing import Pool
 from numpy import ndarray
-from typing import Callable, Optional, Sequence, Tuple, Type, Union, Iterable
+from typing import Callable, Optional, Sequence, Tuple, Union, Iterable
 from ..base import Sampler
 from .densities import Density
 
@@ -82,8 +82,10 @@ class MarkovChainSampler(Sampler):
             raise TypeError('n_restarts must be an integer.')
         if self.X0 is None:
             if n_restarts <= 0:
-                raise ValueError( 'n_restarts must be a positive integer ' \
-                                  'when x0 is not provided.' )
+                raise ValueError(
+                    'n_restarts must be a positive integer '
+                    'when x0 is not provided.'
+                )
         else:
             if n_restarts < 0:
                 raise ValueError('n_restarts must be a nonnegative integer.')

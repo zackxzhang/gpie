@@ -4,7 +4,7 @@
 import numpy as np                                                # type: ignore
 from abc import ABC, abstractmethod
 from numpy import ndarray, newaxis
-from scipy.stats import multivariate_normal, uniform # type: ignore
+from scipy.stats import multivariate_normal, uniform              # type: ignore
 from typing import Callable
 from ..base import Density, Distribution
 
@@ -57,7 +57,7 @@ class Dirac(SymmetricMixin, Distribution):
         return self.__str__()
 
     def __str__(self):
-        return 'Dirac(mu={})'.format(self.mu)
+        return f'Dirac(mu={self.mu})'
 
     @property
     def n_variates(self):
@@ -113,7 +113,7 @@ class Gaussian(SymmetricMixin, Distribution):
         return self.__str__()
 
     def __str__(self):
-        return 'Gaussian(mu={}, cov={})'.format(self.mu, self.cov)
+        return f'Gaussian(mu={self.mu}, cov={self.cov})'
 
     @property
     def n_variates(self):
@@ -161,7 +161,7 @@ class Uniform(SymmetricMixin, Distribution):
         return self.__str__()
 
     def __str__(self):
-        return 'Uniform(a={}, b={})'.format(self.a, self.b)
+        return f'Uniform(a={self.a}, b={self.b})'
 
     @property
     def n_variates(self):

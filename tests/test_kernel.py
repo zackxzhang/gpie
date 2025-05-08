@@ -44,8 +44,8 @@ class KernelTestCase(unittest.TestCase):
         ng = approx_fprime(x, fun, 1e-8)
         err = np.amax(np.abs(ag - ng) / (np.abs(ag + ng) + 1e-2))
         if not err < 5e-3:
-            print('\nanalytical gradient {}'.format(ag))
-            print('numerical  gradient {}\n'.format(ng))
+            print(f'\nanalytical gradient {ag}')
+            print(f'numerical  gradient {ng}\n')
             self.assertTrue(err < 5e-3)
 
     def _gpr_grad(self, kernel):
@@ -303,8 +303,8 @@ class KernelTestCase(unittest.TestCase):
             try:
                 assert err < 1e-6
             except AssertionError:
-                print('analytical gradient {}'.format(ag))
-                print('numerical  gradient {}'.format(ng))
+                print(f'analytical gradient {ag}')
+                print(f'numerical  gradient {ng}')
                 self.fail('gpr gradient fails.')
         # fitted
         self.assertFalse(gpr.fitted())
