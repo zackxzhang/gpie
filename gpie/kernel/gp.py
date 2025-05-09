@@ -27,8 +27,12 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
     solvers = {'l-bfgs-b'}
     aquisitions = {'pi', 'ei', 'lcb'}
 
-    def __init__(self, kernel: Kernel = 1. * RBFKernel(1.) + 1. * WhiteKernel(),
-                 inference: str = 'exact', solver: str = 'l-bfgs-b'):
+    def __init__(
+        self,
+        kernel: Kernel = 1. * RBFKernel(1.) + 1. * WhiteKernel(),
+        inference: str = 'exact',
+        solver: str = 'l-bfgs-b'
+    ):
 
         super().__init__()
 
@@ -129,8 +133,10 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             p = self.posterior_predictive(x[np.newaxis, :])
             mu, sigma = p.mu.item(), sqrt(p.cov.item())
             y_min = self.y.min()
-            return (y_min - mu) * norm.cdf(y_min, mu, sigma) + \
-                   sigma * norm.pdf(y_min, mu, sigma)
+            return (
+                (y_min - mu) * norm.cdf(y_min, mu, sigma) +
+                       sigma * norm.pdf(y_min, mu, sigma)
+            )
         # lower confidence bound
         def fun_lcb(x: ndarray, beta: float = 1.) -> float:
             assert is_array(x, 1, np.number)
@@ -154,8 +160,11 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         else:
             raise ValueError(f'acquisition must be in {self.aquisitions}.')
 
-    def config(self, x0: Optional[ndarray] = None,
-               n_restarts: Optional[int] = None):
+    def config(
+        self,
+        x0: Optional[ndarray] = None,
+        n_restarts: Optional[int] = None
+    ):
         if x0 is not None:
             self.optimizer.X0 = x0
         if n_restarts is not None:
@@ -251,9 +260,13 @@ class tProcessRegressor(BayesianSupervisedModel):
     solvers = {'l-bfgs-b'}
     aquisitions = {'pi', 'ei', 'lcb'}
 
-    def __init__(self, nu: int = 3,
-                 kernel: Kernel = 1. * RBFKernel(1.) + 1. * WhiteKernel(),
-                 inference: str = 'exact', solver: str = 'l-bfgs-b'):
+    def __init__(
+        self,
+        nu: int = 3,
+        kernel: Kernel = 1. * RBFKernel(1.) + 1. * WhiteKernel(),
+        inference: str = 'exact',
+        solver: str = 'l-bfgs-b'
+    ):
 
         super().__init__()
 
@@ -326,8 +339,11 @@ class tProcessRegressor(BayesianSupervisedModel):
     def _acq(self, acquisition: str) -> Callable:
         raise NotImplementedError
 
-    def config(self, x0: Optional[ndarray] = None,
-               n_restarts: Optional[int] = None):
+    def config(
+        self,
+        x0: Optional[ndarray] = None,
+        n_restarts: Optional[int] = None
+    ):
         if x0 is not None:
             self.optimizer.X0 = x0
         if n_restarts is not None:

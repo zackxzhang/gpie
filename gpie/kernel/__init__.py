@@ -14,5 +14,6 @@ __all__ = [
     'RationalQuadraticKernel', 'MaternKernel',
     'PeriodicKernel', 'CosineKernel', 'SpectralKernel',
     'LinearKernel', 'NeuralKernel',
-    'GaussianProcessRegressor', 'BayesianOptimizer'
+    'GaussianProcessRegressor', 'tProcessRegressor',
+    'BayesianOptimizer'
 ]
