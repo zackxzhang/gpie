@@ -13,8 +13,15 @@ from .densities import Density
 class MarkovChainSampler(Sampler):
     """ Markov chain sampler, including MCMC and SA """
 
-    def __init__(self, log_p: Density, q: Density, x0: ndarray,
-                 n_samples: int, n_burns: int, n_restarts: int):
+    def __init__(
+        self,
+        log_p: Density,
+        q: Density,
+        x0: ndarray,
+        n_samples: int,
+        n_burns: int,
+        n_restarts: int,
+    ):
         self.log_p = log_p
         self.q = q
         self.X0 = x0
@@ -64,10 +71,12 @@ class MarkovChainSampler(Sampler):
 
     @X0.setter
     def X0(self, x0: ndarray):
-        if not (isinstance(x0, ndarray) and \
-                x0.ndim in (1, 2) and \
-                np.issubdtype(x0.dtype, np.number) \
-                and np.all(np.isfinite(x0))):
+        if not (
+                isinstance(x0, ndarray)
+            and x0.ndim in (1, 2)
+            and np.issubdtype(x0.dtype, np.number)
+            and np.all(np.isfinite(x0))
+        ):
             raise TypeError('x0 must be a 1d or 2d numeric array.')
         X0 = np.atleast_2d(x0)
         self._X0 = X0
@@ -117,9 +126,15 @@ class MarkovChainSampler(Sampler):
 
 class MarkovChainMonteCarloSampler(MarkovChainSampler):
     """ Markov chain Monte Carlo, a.k.a. Metropolis Hastings """
-    def __init__(self, log_p: Density, q: Density, x0: ndarray,
-                 n_samples: int = 10000, n_burns: int = 2000,
-                 n_restarts: int = 0):
+    def __init__(
+        self,
+        log_p: Density,
+        q: Density,
+        x0: ndarray,
+        n_samples: int = 10000,
+        n_burns: int = 2000,
+        n_restarts: int = 0,
+    ):
         super().__init__(log_p, q, x0, n_samples, n_burns, n_restarts)
 
     def _sample(self, x0: ndarray):
@@ -141,9 +156,16 @@ class MarkovChainMonteCarloSampler(MarkovChainSampler):
 class SimulatedAnnealingSampler(MarkovChainSampler):
     """ simulated annealing """
 
-    def __init__(self, log_p: Density, q: Density, x0: ndarray,
-                 n_samples: int = 10000, n_burns: int = 2000,
-                 n_restarts: int = 0, cooling: Union[str, ndarray] = 'linear'):
+    def __init__(
+        self,
+        log_p: Density,
+        q: Density,
+        x0: ndarray,
+        n_samples: int = 10000,
+        n_burns: int = 2000,
+        n_restarts: int = 0,
+        cooling: Union[str, ndarray] = 'linear'
+    ):
         super().__init__(log_p, q, x0, n_samples, n_burns, n_restarts)
         if cooling == 'linear':
             self.cooling = np.linspace(1., 0.1, self.n_burns+self.n_samples)

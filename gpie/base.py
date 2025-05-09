@@ -118,8 +118,11 @@ class Bounds:
     empty bounds indicate no learnable parameters
     bound values must be finite
     """
-    def __init__(self, lowers: ndarray = np.array([]),
-                       uppers: ndarray = np.array([])):
+    def __init__(
+        self,
+        lowers: ndarray = np.array([]),
+        uppers: ndarray = np.array([]),
+    ):
         if not is_array(lowers, 1, np.number):
             raise TypeError('lower bounds must be 1d numeric array.')
         if not is_array(uppers, 1, np.number):
@@ -166,8 +169,10 @@ class Bounds:
         """ returns true if values are bounded within [lower, upper] """
         if values.shape != self.lowers.shape:
             raise ValueError('dimension of values must agree with bounds.')
-        return np.all(self.lowers - 1e-8 <= values) and \
-               np.all(self.uppers + 1e-8 >= values)
+        return (
+            np.all(self.lowers - 1e-8 <= values) and
+            np.all(self.uppers + 1e-8 >= values)
+        )
 
     def get(self, backend: str = 'scipy'):
         if backend == 'scipy':
@@ -187,9 +192,12 @@ class Thetas:
     infinite theta values indicate uninitialized status
     """
 
-    def __init__(self, values: ndarray = np.array([]),
-                 bounds: Bounds = Bounds(),
-                 densities: Optional[Sequence[Density]] = None):
+    def __init__(
+        self,
+        values: ndarray = np.array([]),
+        bounds: Bounds = Bounds(),
+        densities: Optional[Sequence[Density]] = None,
+    ):
         if not isinstance(bounds, Bounds):
             raise TypeError('bounds must be Bounds object.')
         self._bounds = bounds
@@ -207,21 +215,27 @@ class Thetas:
     def __add__(self, other):
         if not isinstance(other, Thetas):
             raise TypeError('Thetas can only be added to another Thetas.')
-        return Thetas( np.concatenate([self.values, other.values]),
-                       self.bounds + other.bounds                   )
+        return Thetas(
+            values=np.concatenate([self.values, other.values]),
+            bounds=self.bounds + other.bounds,
+        )
 
     def __radd__(self, other):
         if not isinstance(other, Thetas):
             raise TypeError('Thetas can only be added to another Thetas.')
-        return Thetas( np.concatenate([other.values, self.values]),
-                       other.bounds + self.bounds                   )
+        return Thetas(
+            values=np.concatenate([other.values, self.values]),
+            bounds=other.bounds + self.bounds,
+        )
 
     @classmethod
     def from_seq(cls, values: Sequence[V], bounds: Sequence[B],
                  transform: Callable = lambda x: x):
         """ a convenience method to construct thetas with sequence of values """
-        return Thetas(values=map_array(transform, concat_values(*values)),
-                      bounds=Bounds.from_seq(bounds, transform=transform))
+        return Thetas(
+            values=map_array(transform, concat_values(*values)),
+            bounds=Bounds.from_seq(bounds, transform=transform),
+        )
 
     @property
     def values(self) -> ndarray:

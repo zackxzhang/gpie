@@ -27,11 +27,18 @@ class BayesianOptimizer(Optimizer):
     solvers = {'l-bfgs-b'}
     acquisitions = {'pi', 'ei', 'lcb'}
 
-    def __init__(self, fun: Callable, bounds: Bounds,
-                 x0: ndarray, y0: Optional[ndarray] = None,
-                 n_evals: int = 30, timeout: int = 600,
-                 surrogate: Surrogate = GaussianProcessRegressor(),
-                 acquisition: str = 'ei', solver: str = 'l-bfgs-b'):
+    def __init__(
+        self,
+        fun: Callable,
+        bounds: Bounds,
+        x0: ndarray,
+        y0: Optional[ndarray] = None,
+        n_evals: int = 30,
+        timeout: int = 600,
+        surrogate: Surrogate = GaussianProcessRegressor(),
+        acquisition: str = 'ei',
+        solver: str = 'l-bfgs-b',
+    ):
 
         if isinstance(surrogate, surrogates):
             self._surrogate = surrogate
@@ -128,7 +135,9 @@ class BayesianOptimizer(Optimizer):
         # b) and from uniformly random states (exploration)
         self.optimizer.X0 = self.X
         # acquisition drawn with ampler information deserves more restarts
-        self.optimizer.n_restarts = min(10, max(self.X.shape[0], self.X.shape[1]**2))
+        self.optimizer.n_restarts = min(
+            10, max(self.X.shape[0], self.X.shape[1]**2)
+        )
         # choose next query to be the minimizer of acquisition
         success = False
         try:
@@ -160,8 +169,11 @@ class BayesianOptimizer(Optimizer):
         # update surrogate
         self.surrogate.fit(self.X, self.y)
 
-    def minimize(self, verbose: bool = False,
-                 callback: Optional[Callable] = None) -> dict:
+    def minimize(
+        self,
+        verbose: bool = False,
+        callback: Optional[Callable] = None
+    ) -> dict:
 
         genesis = time()
 

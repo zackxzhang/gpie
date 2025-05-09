@@ -21,9 +21,11 @@ def beale(x1_x2) -> float:
     x_min = (3.0, 0.5)
     """
     x1, x2 = x1_x2[0], x1_x2[1]
-    return (1.5 - x1 + x1 * x2) ** 2 +\
-           (2.25 - x1 + x1 * x2**2) ** 2 +\
-           (2.625 - x1 + x1 * x2**3) ** 2
+    return (
+        (1.5   - x1 + x1 * x2   ) ** 2 +
+        (2.25  - x1 + x1 * x2**2) ** 2 +
+        (2.625 - x1 + x1 * x2**3) ** 2
+    )
 
 
 class KernelTestCase(unittest.TestCase):
@@ -91,8 +93,10 @@ class KernelTestCase(unittest.TestCase):
         self._gpr_grad(rbf)
 
     def test_rbf_ard(self):
-        rbf = RBFKernel(np.ones((3,)),
-                        l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        rbf = RBFKernel(
+            np.ones((3,)),
+            l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
         res = np.ones((3, 3)) * exp(-1)
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(rbf(self.X, self.X), res))
@@ -106,8 +110,11 @@ class KernelTestCase(unittest.TestCase):
         self._gpr_grad(rq)
 
     def test_rational_quadratic_ard(self):
-        rq = RationalQuadraticKernel(1., np.ones((3,)),
-                l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        rq = RationalQuadraticKernel(
+            1.,
+            np.ones((3,)),
+            l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
         res = np.ones((3, 3)) * 0.5
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(rq(self.X, self.X), res))
@@ -146,15 +153,21 @@ class KernelTestCase(unittest.TestCase):
 
     def test_matern_ard(self):
         # d = 1
-        matern1 = MaternKernel(1, np.ones((3,)),
-                              l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        matern1 = MaternKernel(
+            1,
+            np.ones((3,)),
+            l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
         res = np.ones((3, 3)) * -sqrt(2.)
         res[np.diag_indices_from(res)] = 0.
         res = np.exp(res)
         self.assertTrue(np.allclose(matern1(self.X, self.X), res))
         # d = 3
-        matern3 = MaternKernel(3, np.ones((3,)),
-                              l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        matern3 = MaternKernel(
+            3,
+            np.ones((3,)),
+            l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
         res = np.ones((3, 3)) * sqrt(6.)
         res[np.diag_indices_from(res)] = 0.
         res += 1.
@@ -164,8 +177,11 @@ class KernelTestCase(unittest.TestCase):
         res *= tmp
         self.assertTrue(np.allclose(matern3(self.X, self.X), res))
         # d = 5
-        matern5 = MaternKernel(5, np.ones((3,)),
-                              l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        matern5 = MaternKernel(
+            5,
+            np.ones((3,)),
+            l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
         res = np.ones((3, 3)) * sqrt(10.)
         res[np.diag_indices_from(res)] = 0.
         res = 1./3. * res**2 + res + 1.
@@ -186,9 +202,12 @@ class KernelTestCase(unittest.TestCase):
         self._gpr_grad(periodic)
 
     def test_periodic_ard(self):
-        periodic = PeriodicKernel(np.ones((3,)), np.ones((3,)),
-                       p_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
-                       l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        periodic = PeriodicKernel(
+            np.ones((3,)),
+            np.ones((3,)),
+            p_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+            l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
         res = np.ones((3, 3)) * exp(-4. * sin(pi)**2)
         res[np.diag_indices_from(res)] = 1.
         self.assertTrue(np.allclose(periodic(self.X, self.X), res))
@@ -201,8 +220,10 @@ class KernelTestCase(unittest.TestCase):
         self._gpr_grad(cosine)
 
     def test_cosine_ard(self):
-        cosine = CosineKernel(np.ones((3,)),
-                       p_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        cosine = CosineKernel(
+            np.ones((3,)),
+            p_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
         res = np.ones((3, 3))
         self.assertTrue(np.allclose(cosine(self.X, self.X), res))
         self._gpr_grad(cosine)
@@ -210,27 +231,40 @@ class KernelTestCase(unittest.TestCase):
     def test_spectral_iso(self):
         rbf = RBFKernel(1./(2.*pi))
         spectral = SpectralKernel(1., 1.)
-        self.assertTrue(np.allclose(rbf(self.X, self.X),
-                                    spectral(self.X, self.X)))
+        self.assertTrue(
+            np.allclose(rbf(self.X, self.X), spectral(self.X, self.X))
+        )
         angle = np.zeros((3, 3))
         angle[:, 1] = -1. * (2.*pi)
         angle[:, 2] = -2. * (2.*pi)
-        self.assertTrue(np.allclose(rbf(self.X, self.Z) * np.cos(angle),
-                                    spectral(self.X, self.Z)))
+        self.assertTrue(
+            np.allclose(
+                rbf(self.X, self.Z) * np.cos(angle),
+                spectral(self.X, self.Z),
+            )
+        )
         self._gpr_grad(spectral)
 
     def test_spectral_ard(self):
         rbf = RBFKernel(1./(2.*pi))
-        spectral = SpectralKernel(np.ones((3,)), np.ones((3,)),
-                       u_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
-                       v_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
-        self.assertTrue(np.allclose(rbf(self.X, self.X),
-                                    spectral(self.X, self.X)))
+        spectral = SpectralKernel(
+            np.ones((3,)),
+            np.ones((3,)),
+            u_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+            v_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
+        self.assertTrue(
+            np.allclose(rbf(self.X, self.X), spectral(self.X, self.X))
+        )
         angle = np.zeros((3, 3))
         angle[:, 1] = -1. * (2.*pi)
         angle[:, 2] = -2. * (2.*pi)
-        self.assertTrue(np.allclose(rbf(self.X, self.Z) * np.cos(angle),
-                                    spectral(self.X, self.Z)))
+        self.assertTrue(
+            np.allclose(
+                rbf(self.X, self.Z) * np.cos(angle),
+                spectral(self.X, self.Z),
+            )
+        )
         self._gpr_grad(spectral)
 
     def test_linear_iso(self):
@@ -242,8 +276,10 @@ class KernelTestCase(unittest.TestCase):
         self._gpr_grad(linear)
 
     def test_linear_ard(self):
-        linear = WhiteKernel() + LinearKernel(np.ones((3,)),
-                              l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        linear = LinearKernel(
+            np.ones((3,)),
+            l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        ) + WhiteKernel()
         self.assertTrue(np.allclose(linear(self.X, self.X), 2 * self.X))
         res = np.array([[2, 1, 1], [1, 3, 2], [1, 2, 4]], dtype=float)
         self.assertTrue(np.allclose(linear(self.Z, self.Z), res))
@@ -256,8 +292,11 @@ class KernelTestCase(unittest.TestCase):
         self._gpr_grad(neural)
 
     def test_neural_ard(self):
-        neural = NeuralKernel(1., np.ones((3,)),
-                              l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5))
+        neural = NeuralKernel(
+            1.,
+            np.ones((3,)),
+            l_bounds=(np.ones((3,))*1e-5, np.ones((3,))*1e5),
+        )
         res = 2./pi * np.arcsin((np.ones((3, 3)) + np.eye(3)) / 3.)
         self.assertTrue(np.allclose(neural(self.X, self.X), res))
         self._gpr_grad(neural)
@@ -288,9 +327,11 @@ class KernelTestCase(unittest.TestCase):
 
     def test_gpr(self):
         k = self.X.shape[1]
-        ker = 0.5 * RBFKernel() + \
-              0.4 * RationalQuadraticKernel() + \
-              0.3 * WhiteKernel()
+        ker = (
+            0.5 * RBFKernel() +
+            0.4 * RationalQuadraticKernel() +
+            0.3 * WhiteKernel()
+        )
         gpr = GaussianProcessRegressor(kernel=ker)
         # gradient
         f = gpr._obj(self.X, self.y)

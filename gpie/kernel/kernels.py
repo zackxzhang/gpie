@@ -222,8 +222,13 @@ class Product(Kernel):
         def fun(log_params: ndarray):
             K1, J1 = f1(log_params[:self.b])
             K2, J2 = f2(log_params[self.b:])
-            return K1 * K2, np.dstack(( np.einsum('ij,ijk->ijk', K2, J1),
-                                        np.einsum('ij,ijk->ijk', K1, J2) ))
+            return (
+                K1 * K2,
+                np.dstack((
+                    np.einsum('ij,ijk->ijk', K2, J1),
+                    np.einsum('ij,ijk->ijk', K1, J2),
+                )),
+            )
 
         return fun
 
@@ -332,8 +337,13 @@ class KroneckerSum(Kernel):
             K1, J1 = f1(log_params[:self.b])
             K2, J2 = f2(log_params[self.b:])
             O = np.zeros_like(J1)
-            return np.add.outer(K1, K2), \
-                   np.dstack((np.add.outer(J1, O), np.add.outer(J2, O)))
+            return (
+                np.add.outer(K1, K2),
+                np.dstack((
+                    np.add.outer(J1, O),
+                    np.add.outer(J2, O),
+                )),
+            )
 
         return fun
 
@@ -387,8 +397,13 @@ class KroneckerProduct(Kernel):
         def fun(log_params: ndarray):
             K1, J1 = f1(log_params[:self.b])
             K2, J2 = f2(log_params[self.b:])
-            return np.kron(K1, K2), \
-                   np.dstack((np.kron(K2, J1), np.kron(K1, J2)))
+            return (
+                np.kron(K1, K2),
+                np.dstack((
+                    np.kron(K2, J1),
+                    np.kron(K1, J2),
+                )),
+            )
 
         return fun
 
@@ -656,8 +671,13 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
     l (average length scale): positive float
     """
 
-    def __init__(self, m: float =1.0, l: float = 1.0,
-                 m_bounds: B = (1e-4, 1e+4), l_bounds: B = (1e-4, 1e+4)):
+    def __init__(
+        self,
+        m: float =1.0,
+        l: float = 1.0,
+        m_bounds: B = (1e-4, 1e+4),
+        l_bounds: B = (1e-4, 1e+4),
+    ):
         if isinstance(m, float):
             if m <= 0:
                 raise ValueError('mixture coefficient must be positive.')
@@ -816,8 +836,11 @@ class MaternKernel(StationaryMixin, Kernel):
 
     @property
     def hyperparameters(self):
-        return {'Bessel order': Fraction(self.d, 2),
-                'length scale': self.l}
+        return {
+            'Bessel order': Fraction(self.d, 2),
+            'length scale': self.l
+        }
+
     @property
     def isotropic(self):
         if len(self.thetas) == 1:
@@ -923,8 +946,13 @@ class PeriodicKernel(StationaryMixin, Kernel):
     l (length scale): positive float (isotropic) or positive array (anisotropic)
     """
 
-    def __init__(self, p: float = 1.0, l: float = 1.0,
-                 p_bounds: B = (1e-4, 1e+4), l_bounds: B = (1e-4, 1e+4)):
+    def __init__(
+        self,
+        p: float = 1.0,
+        l: float = 1.0,
+        p_bounds: B = (1e-4, 1e+4),
+        l_bounds: B = (1e-4, 1e+4),
+    ):
         check_positive_scalar_array(p, 'period')
         check_positive_scalar_array(l, 'length scale')
         if not (type(p) == type(l) == float or
@@ -1173,13 +1201,21 @@ class SpectralKernel(StationaryMixin, Kernel):
     spectral mixture kernel, k_sm = Σ_q k_q
     """
 
-    def __init__(self, u: float = 1.0, v: float = 1.0,
-                 u_bounds: B = (1e-4, 1e+4), v_bounds: B = (1e-4, 1e+4)):
+    def __init__(
+        self,
+        u: float = 1.0,
+        v: float = 1.0,
+        u_bounds: B = (1e-4, 1e+4),
+        v_bounds: B = (1e-4, 1e+4),
+    ):
         check_positive_scalar_array(u, 'mean')
         check_positive_scalar_array(v, 'sd')
-        if not (type(u) == type(v) == float or
-                isinstance(u, ndarray) and isinstance(v, ndarray) and
-                len(u) == len(v)):
+        if not (
+                type(u) == type(v) == float
+             or isinstance(u, ndarray)
+            and isinstance(v, ndarray)
+            and len(u) == len(v)
+        ):
             raise ValueError('means and sds must be of same size.')
         self._thetas = Thetas.from_seq((u, v), (u_bounds, v_bounds), log)
 
@@ -1249,8 +1285,10 @@ class SpectralKernel(StationaryMixin, Kernel):
                 return K, np.dstack((d_K_d_logu, d_K_d_logv))
         else:
             if len(self.v) != X.shape[1]:
-                raise ValueError( 'number of features must agree '
-                                  'with number of means / sds.'  )
+                raise ValueError(
+                    'number of features must agree '
+                    'with number of means / sds.'
+                )
             dim = self.dim
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
@@ -1292,8 +1330,9 @@ class SpectralKernel(StationaryMixin, Kernel):
         Xv = np.einsum('ij,j->ij', X, v)
         Zv = np.einsum('ij,j->ij', Z, v)
         R2v2 = dist(Xv, Zv, metric='sqeuclidean')
-        Du = ((X[:, nax, :] - Z[nax, :, :]) * u[nax, nax, :])\
-             .sum(axis=2)
+        Du = (
+            (X[:, nax, :] - Z[nax, :, :]) * u[nax, nax, :]
+        ).sum(axis=2)
         K = np.cos(2*pi * Du) * np.exp(-2.*pi**2 * R2v2)
         return K
 
@@ -1409,8 +1448,13 @@ class NeuralKernel(NonStationaryMixin, Kernel):
     l (length scale): positive float (isotropic) or positive array (anisotropic)
     """
 
-    def __init__(self, c: float = 1.0, l: V = 1.0,
-                 c_bounds: B = (1e-4, 1e+4), l_bounds: B = (1e-4, 1e+4)):
+    def __init__(
+        self,
+        c: float = 1.0,
+        l: V = 1.0,
+        c_bounds: B = (1e-4, 1e+4),
+        l_bounds: B = (1e-4, 1e+4),
+    ):
         check_positive_scalar(c, 'intercept deviation')
         check_positive_scalar_array(l, 'length scale')
         self._thetas = Thetas.from_seq((c, l), (c_bounds, l_bounds), log)
@@ -1474,11 +1518,17 @@ class NeuralKernel(NonStationaryMixin, Kernel):
                 # precompute
                 D = N2_lc2 * np.sqrt(1 - J**2)  # denominator of jacobians
                 # jacobian
-                d_K_d_logc = 2.*c / pi / D * \
-                            (N_lc - .5*J*(n_lc[:, nax]+n_lc[nax, :]))
-                d_K_d_logl = 2./pi / D * (N_lc * X2 * (-2./ l**2) +
-                             J * ((n[:, nax]*n[nax, :])*(2./l**4)   +
-                                  (n[:, nax]+n[nax, :])*((c+1)/l**2) ) )
+                d_K_d_logc = (
+                    2.*c / pi / D *
+                    (N_lc - .5 * J * (n_lc[:, nax] + n_lc[nax, :]))
+                )
+                d_K_d_logl = 2./pi / D * (
+                    N_lc * X2 * (-2. / l**2) +
+                    J * (
+                        (n[:, nax] * n[nax, :]) * (2. / l**4)   +
+                        (n[:, nax] + n[nax, :]) * ((c+1) / l**2)
+                    )
+                )
                 return K, np.dstack((d_K_d_logc, d_K_d_logl))
         else:
             def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
@@ -1503,12 +1553,18 @@ class NeuralKernel(NonStationaryMixin, Kernel):
                 # precompute
                 D = N2_lc2 * np.sqrt(1 - J**2)  # denominator of jacobians
                 # jacobian
-                d_K_d_logc = 2.*c / pi / D * \
-                             (N_lc - .5*J * (n_lc[:, nax] + n_lc[nax, :]))
-                d_K_d_logl = 2./pi / D[:, :, nax] * \
-                             ( (-2.*N_lc)[:, :, nax] * W + J[:, :, nax] *
-                               (np.einsum('i,jjk->ijk', n_lc, W) +
-                                np.einsum('j,iik->ijk', n_lc, W)   ) )
+                d_K_d_logc = (
+                    2.*c / pi / D *
+                    (N_lc - .5 * J * (n_lc[:, nax] + n_lc[nax, :]))
+                )
+                d_K_d_logl = (
+                    2./pi / D[:, :, nax] * (
+                        (-2.*N_lc)[:, :, nax] * W + J[:, :, nax] * (
+                            np.einsum('i,jjk->ijk', n_lc, W) +
+                            np.einsum('j,iik->ijk', n_lc, W)
+                        )
+                    )
+                )
                 return K, np.dstack((d_K_d_logc, d_K_d_logl))
         return fun
 
@@ -1526,8 +1582,10 @@ class NeuralKernel(NonStationaryMixin, Kernel):
             l = self.l
         X_l = np.einsum('ij,j->ij', X, 1./l)
         Z_l = np.einsum('ij,j->ij', Z, 1./l)
-        K = ((X_l**2).sum(axis=1) + self.c + 1.)[:, nax] * \
+        K = (
+            ((X_l**2).sum(axis=1) + self.c + 1.)[:, nax] *
             ((Z_l**2).sum(axis=1) + self.c + 1.)[nax, :]
+        )
         K = (np.einsum('ik,jk->ij', X_l, Z_l) + self.c) / np.sqrt(K)
         K = 2./pi * np.arcsin(K)
         return K
