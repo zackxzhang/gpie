@@ -3,13 +3,13 @@
 
 import numpy as np                                                # type: ignore
 import warnings
+from collections.abc import Callable
 from functools import partial
 from math import pi, exp, log, sqrt
 from numpy import ndarray
 from scipy.linalg import cho_solve, cholesky                      # type: ignore
 from scipy.stats import norm, t                                   # type: ignore
 from scipy.special import gamma                                   # type: ignore
-from typing import Any, Callable, Optional, Sequence, Tuple, Union
 from ..base import BayesianSupervisedModel, Thetas, Density
 from ..infer import (
     Dirac, Gaussian, Student, LogDensity,
@@ -94,8 +94,9 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         kfun = self.kernel._obj(X)
         # log marginal likelihood and its gradient w.r.t. log params
         # ref. GPML algorithm 2.1, equation 5.9
-        def fun(kparams: ndarray, grad: bool = True) \
-            -> Union[Tuple[float, ndarray], float]:
+        def fun(
+            kparams: ndarray, grad: bool = True
+        ) -> tuple[float, ndarray] | float:
             assert is_array(kparams, 1, np.number)
             K, dK = kfun(kparams)
             K[np.diag_indices_from(K)] += 1e-8  # jitter
@@ -160,11 +161,7 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         else:
             raise ValueError(f'acquisition must be in {self.aquisitions}.')
 
-    def config(
-        self,
-        x0: Optional[ndarray] = None,
-        n_restarts: Optional[int] = None
-    ):
+    def config(self, x0: ndarray | None = None, n_restarts: int | None = None):
         if x0 is not None:
             self.optimizer.X0 = x0
         if n_restarts is not None:
@@ -219,8 +216,9 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
         mu = np.einsum('ij,j->i', Kzx, self.dual_weights)
         return mu
 
-    def prior_predictive(self, X: ndarray, n_samples: int = 0) \
-        -> Union[Gaussian, ndarray]:
+    def prior_predictive(
+        self, X: ndarray, n_samples: int = 0
+    ) -> Gaussian | ndarray:
         super().prior_predictive(X, n_samples)
         mu = np.zeros(len(X))
         cov = self.kernel(X, X)
@@ -231,8 +229,9 @@ class GaussianProcessRegressor(BayesianSupervisedModel):
             return prior.sample(n_samples)
         # only support Dirac θ for now
 
-    def posterior_predictive(self, X: ndarray, n_samples: int = 0) \
-        -> Union[Gaussian, ndarray]:
+    def posterior_predictive(
+        self, X: ndarray, n_samples: int = 0
+    ) -> Gaussian | ndarray:
         super().posterior_predictive(X, n_samples)
         Kzx = self.kernel(X, self.X)
         Kzz = self.kernel(X, X)
@@ -339,11 +338,7 @@ class tProcessRegressor(BayesianSupervisedModel):
     def _acq(self, acquisition: str) -> Callable:
         raise NotImplementedError
 
-    def config(
-        self,
-        x0: Optional[ndarray] = None,
-        n_restarts: Optional[int] = None
-    ):
+    def config(self, x0: ndarray | None = None, n_restarts: int | None = None):
         if x0 is not None:
             self.optimizer.X0 = x0
         if n_restarts is not None:
@@ -353,9 +348,9 @@ class tProcessRegressor(BayesianSupervisedModel):
         super().hyper_prior(n_samples)
         raise NotImplementedError
         if n_samples <= 0:
-            ...
+            raise NotImplementedError
         else:
-            ...
+            raise NotImplementedError
 
     def hyper_posterior(self, n_samples: int = 0, **kwargs):
         super().hyper_posterior(n_samples)
@@ -374,15 +369,17 @@ class tProcessRegressor(BayesianSupervisedModel):
         # only support flat hyperprior θ for now
 
     def fit(self, X: ndarray, y: ndarray):
-        ...
+        raise NotImplementedError
 
     def predict(self, X: ndarray) -> ndarray:
-        ...
+        raise NotImplementedError
 
-    def prior_predictive(self, X: ndarray, n_samples: int = 0) \
-        -> Union[Gaussian, ndarray]:
-        ...
+    def prior_predictive(
+        self, X: ndarray, n_samples: int = 0
+    ) -> Gaussian | ndarray:
+        raise NotImplementedError
 
-    def posterior_predictive(self, X: ndarray, n_samples: int = 0) \
-        -> Union[Gaussian, ndarray]:
-        ...
+    def posterior_predictive(
+        self, X: ndarray, n_samples: int = 0
+    ) -> Gaussian | ndarray:
+        raise NotImplementedError

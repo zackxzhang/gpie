@@ -7,8 +7,12 @@ import os
 import unittest
 from math import exp
 from gpie.base import Bounds
-from gpie.util import RandomSeed, TimeOut, is_array, map_array, \
-    concat_values, concat_bounds, check_X, check_X_Z, check_X_y
+from gpie.util import (
+    RandomSeed, TimeOut,
+    is_array, map_array,
+    concat_values, concat_bounds,
+    check_X, check_X_Z, check_X_y
+)
 
 
 class UtilTestCase(unittest.TestCase):

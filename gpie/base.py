@@ -5,9 +5,9 @@ import numpy as np                                                # type: ignore
 import scipy as sp                                                # type: ignore
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Sequence
 from functools import wraps
 from numpy import ndarray
-from typing import Callable, Optional, Sequence, Tuple, Type, Union, Iterable
 from .util import (
     check_X_update, check_X_y, check_X_y_update,
     is_array, map_array, concat_values, concat_bounds, V, B
@@ -196,7 +196,7 @@ class Thetas:
         self,
         values: ndarray = np.array([]),
         bounds: Bounds = Bounds(),
-        densities: Optional[Sequence[Density]] = None,
+        densities: Sequence[Density] | None = None,
     ):
         if not isinstance(bounds, Bounds):
             raise TypeError('bounds must be Bounds object.')
@@ -229,8 +229,12 @@ class Thetas:
         )
 
     @classmethod
-    def from_seq(cls, values: Sequence[V], bounds: Sequence[B],
-                 transform: Callable = lambda x: x):
+    def from_seq(
+        cls,
+        values: Sequence[V],
+        bounds: Sequence[B],
+        transform: Callable = lambda x: x
+    ):
         """ a convenience method to construct thetas with sequence of values """
         return Thetas(
             values=map_array(transform, concat_values(*values)),

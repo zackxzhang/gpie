@@ -2,15 +2,15 @@
 # kernel functions
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from fractions import Fraction
 from functools import wraps
 import numpy as np                                                # type: ignore
 from math import exp, log, sqrt, pi
 from numpy import ndarray, newaxis as nax
-from typing import Any, Callable, Optional, Sequence, Tuple, Type, Union
 from ..base import Model, Bounds, Thetas, Hypers
 from ..metric import dist
-from ..util import audit_X, audit_X_Z, B, V, is_array, concat_bounds
+from ..util import audit_X, audit_X_Z, B, V, is_array
 
 
 def verify_kernel_operands(kernel_operator):
@@ -240,7 +240,7 @@ class Product(Kernel):
 class Power(Kernel):
     """ elementwise exponentiation of a kernel """
 
-    def __init__(self, k: Kernel, exponent: Union[int, float]):
+    def __init__(self, k: Kernel, exponent: int | float):
         self._k = k
         self._e = exponent
 
@@ -491,7 +491,7 @@ class ConstantKernel(StationaryMixin, Kernel):
     @audit_X
     def _obj(self, X: ndarray) -> Callable:
         U = np.ones((X.shape[0], X.shape[0]))
-        def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+        def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
             assert is_array(log_params, 1, np.number)
             a = exp(log_params[0])
             K = U * a
@@ -537,7 +537,7 @@ class WhiteKernel(StationaryMixin, Kernel):
         same = np.isclose(dist(X, X, 'sqeuclidean'), 0.)
         K = np.where(same, 1., 0.)
         dK = np.empty((X.shape[0], X.shape[0], 0))
-        def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+        def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
             assert is_array(log_params, 1, np.number)
             return K, dK
         return fun
@@ -599,7 +599,7 @@ class RBFKernel(StationaryMixin, Kernel):
             """ precompute reusable result """
             # pairwise l2 distance squared
             R2 = dist(X, X, metric='sqeuclidean')
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 """ kernel and its jacobian w.r.t. log parameters """
                 assert is_array(log_params, 1, np.number)
                 # length scale
@@ -618,7 +618,7 @@ class RBFKernel(StationaryMixin, Kernel):
                     'number of features must agree '
                     'with number of length scales.'
                 )
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 """ kernel and jacobian carefully engineered for efficiency """
                 assert is_array(log_params, 1, np.number)
                 # length scale
@@ -730,7 +730,7 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
     def _obj(self, X: ndarray) -> Callable:
         if self.isotropic:
             R2 = dist(X, X, metric='sqeuclidean')
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # mixture coefficient, length scale
                 m = exp(log_params[0])
@@ -750,7 +750,7 @@ class RationalQuadraticKernel(StationaryMixin, Kernel):
                     'number of features must agree '
                     'with number of length scales.'
                 )
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # length scale
                 m = exp(log_params[0])
@@ -877,7 +877,7 @@ class MaternKernel(StationaryMixin, Kernel):
         g = self.g
         if self.isotropic:
             R = dist(X, X, metric='euclidean')
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # length scale
                 l = exp(log_params[0])
@@ -893,7 +893,7 @@ class MaternKernel(StationaryMixin, Kernel):
                     d_K_d_logl = (J * B * g(B))[:, :, nax]
                 return K, d_K_d_logl
         else:
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # length scale
                 l = np.exp(log_params)
@@ -1008,7 +1008,7 @@ class PeriodicKernel(StationaryMixin, Kernel):
     @audit_X
     def _obj(self, X: ndarray) -> Callable:
         if self.isotropic:
-            def fun(log_params)-> Tuple[ndarray, ndarray]:
+            def fun(log_params)-> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period and length scale
                 p = exp(log_params[0])
@@ -1035,7 +1035,7 @@ class PeriodicKernel(StationaryMixin, Kernel):
                     'number of periods / length scales.'
                 )
             dim = self.dim
-            def fun(log_params)-> Tuple[ndarray, ndarray]:
+            def fun(log_params)-> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period and length scale
                 p = np.exp(log_params[:dim])
@@ -1130,7 +1130,7 @@ class CosineKernel(StationaryMixin, Kernel):
         masks = np.full((k, k), True, dtype=bool)
         masks[np.diag_indices_from(masks)] = False
         if self.isotropic:
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period
                 p = exp(log_params[0])
@@ -1152,7 +1152,7 @@ class CosineKernel(StationaryMixin, Kernel):
                     'number of features must agree '
                     'with number of length scales.'
                 )
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period
                 p = np.exp(log_params)
@@ -1267,7 +1267,7 @@ class SpectralKernel(StationaryMixin, Kernel):
     def _obj(self, X: ndarray) -> Callable:
         if self.isotropic:
             R2 = dist(X, X, metric='sqeuclidean')
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period and length scale
                 u = exp(log_params[0])
@@ -1290,7 +1290,7 @@ class SpectralKernel(StationaryMixin, Kernel):
                     'with number of means / sds.'
                 )
             dim = self.dim
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # period and length scale
                 u = np.exp(log_params[:dim])
@@ -1390,7 +1390,7 @@ class LinearKernel(NonStationaryMixin, Kernel):
         if self.isotropic:
             # pairwise dot product
             X2 = np.einsum('ik,jk->ij', X, X)
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # length scale
                 l = exp(log_params[0])
@@ -1405,7 +1405,7 @@ class LinearKernel(NonStationaryMixin, Kernel):
                     'number of features must agree '
                     'with number of length scales.'
                 )
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # length scale
                 l = np.exp(log_params)
@@ -1503,7 +1503,7 @@ class NeuralKernel(NonStationaryMixin, Kernel):
             X2 = np.einsum('ik,jk->ij', X, X)
             # l2 norm squared
             n = np.diagonal(X2)
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # intercept deviation, length scale
                 c = exp(log_params[0])
@@ -1531,7 +1531,7 @@ class NeuralKernel(NonStationaryMixin, Kernel):
                 )
                 return K, np.dstack((d_K_d_logc, d_K_d_logl))
         else:
-            def fun(log_params: ndarray) -> Tuple[ndarray, ndarray]:
+            def fun(log_params: ndarray) -> tuple[ndarray, ndarray]:
                 assert is_array(log_params, 1, np.number)
                 # intercept deviation, length scale
                 c = exp(log_params[0])

@@ -5,7 +5,6 @@ import numpy as np                                                # type: ignore
 from abc import ABC, abstractmethod
 from multiprocessing import Pool
 from numpy import ndarray
-from typing import Callable, Optional, Sequence, Tuple, Union, Iterable
 from ..base import Sampler
 from .densities import Density
 
@@ -164,7 +163,7 @@ class SimulatedAnnealingSampler(MarkovChainSampler):
         n_samples: int = 10000,
         n_burns: int = 2000,
         n_restarts: int = 0,
-        cooling: Union[str, ndarray] = 'linear'
+        cooling: str | ndarray = 'linear'
     ):
         super().__init__(log_p, q, x0, n_samples, n_burns, n_restarts)
         if cooling == 'linear':

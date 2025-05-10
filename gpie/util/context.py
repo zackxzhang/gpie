@@ -50,9 +50,11 @@ class Timer:
 
     def __exit__(self, *args):
         print(self.prompt + str(datetime.now() - self.start))
-        # print(colorama.Fore.BLUE + \
-        #       self.prompt + str(datetime.now() - self.start) + \
-        #       colorama.Style.RESET_ALL)
+        # print(
+        #     colorama.Fore.BLUE +
+        #     self.prompt + str(datetime.now() - self.start) +
+        #     colorama.Style.RESET_ALL
+        # )
 
 
 class TimeOut:
