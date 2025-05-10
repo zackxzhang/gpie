@@ -4,10 +4,10 @@
 import numpy as np                                                # type: ignore
 import scipy                                                      # type: ignore
 import warnings
+from collections.abc import Callable
 from functools import partial
 from multiprocessing import Pool
 from numpy import ndarray
-from typing import Any, Callable, Optional, Sequence, Tuple, Union
 from ..base import Optimizer, Bounds, OPT_BACKENDS
 
 
@@ -18,9 +18,14 @@ class GradientDescentOptimizer(Optimizer):
     wrapper of optimizer backends
     """
 
-    def __init__(self, bounds: Bounds, x0: ndarray, n_restarts: int = 0,
-                 solver: str = 'l-bfgs-b', backend='scipy'):
-
+    def __init__(
+        self,
+        bounds: Bounds,
+        x0: ndarray,
+        n_restarts: int = 0,
+        solver: str = 'l-bfgs-b',
+        backend='scipy'
+    ):
         # configuration
         self.backend = backend
         # search space
@@ -64,8 +69,12 @@ class GradientDescentOptimizer(Optimizer):
 
     @X0.setter
     def X0(self, x0: ndarray):
-        if not (isinstance(x0, ndarray) and x0.ndim in (1, 2) and \
-                np.issubdtype(x0.dtype, np.number) and np.all(np.isfinite(x0))):
+        if not (
+                isinstance(x0, ndarray)
+            and x0.ndim in (1, 2)
+            and np.issubdtype(x0.dtype, np.number)
+            and np.all(np.isfinite(x0))
+        ):
             raise TypeError('x0 must be a 1d or 2d numeric array.')
         X0 = np.atleast_2d(x0)
         for x in X0:
@@ -95,8 +104,11 @@ class GradientDescentOptimizer(Optimizer):
     def _restart(self):
         if self.n_restarts == 0:
             return
-        X = np.random.uniform(low=self.bounds.lowers, high=self.bounds.uppers,
-                              size=(self.n_restarts, len(self.bounds)))
+        X = np.random.uniform(
+            low=self.bounds.lowers,
+            high=self.bounds.uppers,
+            size=(self.n_restarts, len(self.bounds)),
+        )
         if self.X0 is None:
             self.X0 = X
         else:
@@ -114,15 +126,20 @@ class GradientDescentOptimizer(Optimizer):
         else:
             raise NotImplementedError
 
-    def _min(self, fun: Callable, jac: Union[Callable, bool], x0: ndarray):
+    def _min(self, fun: Callable, jac: Callable | bool, x0: ndarray):
         return OPT_BACKENDS[self.backend](
-                   fun=fun, jac=jac, x0=x0,
-                   bounds=self.bounds.get(self.backend),
-                   method=self.solver)
+            fun=fun, jac=jac, x0=x0,
+            bounds=self.bounds.get(self.backend),
+            method=self.solver,
+        )
 
-    def minimize(self, fun: Callable, jac: Union[Callable, bool],
-                 verbose: bool = False,
-                 callback: Optional[Callable] = None) -> dict:
+    def minimize(
+        self,
+        fun: Callable,
+        jac: Callable | bool,
+        verbose: bool = False,
+        callback: Callable | None = None,
+    ) -> dict:
 
         if not callable(fun):
             raise TypeError('fun must be callable.')
@@ -157,9 +174,13 @@ class GradientDescentOptimizer(Optimizer):
                 'x': X[y.argmin()],
             }
 
-    def maximize(self, fun: Callable, jac: Union[Callable, bool],
-                 verbose: bool = False,
-                 callback: Optional[Callable] = None) -> dict:
+    def maximize(
+        self,
+        fun: Callable,
+        jac: Callable | bool,
+        verbose: bool = False,
+        callback: Callable | None = None,
+    ) -> dict:
 
         if not callable(fun):
             raise TypeError('fun must be callable.')

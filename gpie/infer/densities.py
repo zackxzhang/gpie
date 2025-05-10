@@ -3,9 +3,9 @@
 
 import numpy as np                                                # type: ignore
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from numpy import ndarray, newaxis
 from scipy.stats import multivariate_normal, uniform              # type: ignore
-from typing import Callable
 from ..base import Density, Distribution
 
 

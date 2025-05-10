@@ -2,30 +2,36 @@
 # data utilities
 
 import numpy as np                                                # type: ignore
+from collections.abc import Callable, Sequence
 from functools import wraps, partial
 from numpy import ndarray
-from typing import Any, Callable, Optional, Tuple, Type, Union, Sequence
+from typing import TypeAlias
 
 
 array32 = partial(np.array, dtype=np.float32)
 array16 = partial(np.array, dtype=np.float16)
 
 
-def is_array(x: Any, ndim=1, dtype=np.number) -> bool:
-    if isinstance(x, ndarray) and x.ndim == ndim \
-        and np.issubdtype(x.dtype, dtype):
+def is_array(x, ndim=1, dtype=np.number) -> bool:
+    if (
+        isinstance(x, ndarray)          and
+        x.ndim == ndim                  and
+        np.issubdtype(x.dtype, dtype)
+    ):
         return True
     else:
         return False
 
 
-def map_array(f: Callable, x: Union[ndarray, Sequence[ndarray]]) \
-    -> Union[ndarray, Sequence[ndarray]]:
+def map_array(
+    f: Callable,
+    x: ndarray | Sequence[ndarray]
+) -> ndarray | Sequence[ndarray]:
     return np.vectorize(f, otypes=[float])(x)
 
 
-V = Union[float, ndarray]
-B = Union[Tuple[float, float], Tuple[ndarray, ndarray]]
+V: TypeAlias = float | ndarray
+B: TypeAlias = tuple[float, float] | tuple[ndarray, ndarray]
 
 
 def concat_values(*values: V) -> ndarray:
@@ -40,7 +46,7 @@ def concat_values(*values: V) -> ndarray:
         return np.array(vs)
 
 
-def concat_bounds(*bounds: B) -> Tuple[ndarray, ndarray]:
+def concat_bounds(*bounds: B) -> tuple[ndarray, ndarray]:
         ls = list()
         us = list()
         for b in bounds:
@@ -48,9 +54,12 @@ def concat_bounds(*bounds: B) -> Tuple[ndarray, ndarray]:
                 if isinstance(b[0], float) and isinstance(b[1], float):
                     ls.append(b[0])
                     us.append(b[1])
-                elif isinstance(b[0], ndarray) and isinstance(b[1], ndarray) \
-                    and np.issubdtype(b[0].dtype, np.number) \
-                    and np.issubdtype(b[1].dtype, np.number):
+                elif (
+                        isinstance(b[0], ndarray)
+                    and isinstance(b[1], ndarray)
+                    and np.issubdtype(b[0].dtype, np.number)
+                    and np.issubdtype(b[1].dtype, np.number)
+                ):
                     ls.extend(b[0].flat)
                     us.extend(b[1].flat)
                 else:
@@ -121,5 +130,5 @@ audit_X_y_update = fun2dec(check_X_y_update)
 
 class GridData:
 
-    def __init__(self, X: ndarray, y: Optional[ndarray] = None):
+    def __init__(self, X: ndarray, y: ndarray | None = None):
         raise NotImplementedError

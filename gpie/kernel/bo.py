@@ -3,9 +3,9 @@
 
 import numpy as np                                                # type: ignore
 import warnings
-from time import time
+from collections.abc import Callable
 from numpy import ndarray                                         # type: ignore
-from typing import Any, Callable, Optional, Sequence, Tuple, Union
+from time import time
 from .gp import GaussianProcessRegressor, tProcessRegressor
 from ..base import Bounds, Optimizer
 from ..infer import GradientDescentOptimizer
@@ -13,7 +13,7 @@ from ..metric import dist
 from ..util import is_array
 
 
-Surrogate = Union[GaussianProcessRegressor, tProcessRegressor]
+Surrogate  = GaussianProcessRegressor | tProcessRegressor
 surrogates = (GaussianProcessRegressor, tProcessRegressor)
 
 
@@ -32,7 +32,7 @@ class BayesianOptimizer(Optimizer):
         fun: Callable,
         bounds: Bounds,
         x0: ndarray,
-        y0: Optional[ndarray] = None,
+        y0: ndarray | None = None,
         n_evals: int = 30,
         timeout: int = 600,
         surrogate: Surrogate = GaussianProcessRegressor(),
@@ -172,7 +172,7 @@ class BayesianOptimizer(Optimizer):
     def minimize(
         self,
         verbose: bool = False,
-        callback: Optional[Callable] = None
+        callback: Callable | None = None,
     ) -> dict:
 
         genesis = time()
