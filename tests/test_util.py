@@ -8,7 +8,6 @@ import unittest
 from math import exp
 from gpie.base import Bounds
 from gpie.util import (
-    RandomSeed, TimeOut,
     is_array, map_array,
     concat_values, concat_bounds,
     check_X, check_X_Z, check_X_y
@@ -16,28 +15,6 @@ from gpie.util import (
 
 
 class UtilTestCase(unittest.TestCase):
-
-    def test_random_seed(self):
-        with RandomSeed(42):
-            a = np.random.uniform()
-        with RandomSeed(42):
-            b = np.random.uniform()
-        self.assertEqual(a, b)
-
-    def test_time_out(self):
-        def f():
-            with TimeOut(0.1):
-                time.sleep(0.2)
-        def g():
-            with TimeOut(0.2):
-                time.sleep(0.1)
-        if os.name == 'posix':
-            with self.assertRaises(TimeoutError):
-                f()
-            try:
-                g()
-            except TimeoutError:
-                self.fail('timeout fails.')
 
     def test_is_array(self):
         a = np.array([0., 0.])

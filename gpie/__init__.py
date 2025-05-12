@@ -5,4 +5,4 @@ from . import infer
 from . import kernel
 
 __all__ = ['infer', 'kernel']
-__version__ = '0.3.2'
+__version__ = '0.3.3'

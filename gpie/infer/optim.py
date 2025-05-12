@@ -1,22 +1,17 @@
 # -*- coding: utf-8 -*-
-# numerical optimizer
+# numerical optimization
 
 import numpy as np                                                # type: ignore
-import scipy                                                      # type: ignore
+import scipy as sp                                                # type: ignore
 import warnings
 from collections.abc import Callable
 from functools import partial
 from multiprocessing import Pool
 from numpy import ndarray
-from ..base import Optimizer, Bounds, OPT_BACKENDS
+from ..base import Optimizer, Bounds
 
 
 class GradientDescentOptimizer(Optimizer):
-
-    """
-    gradient descent optimizer
-    wrapper of optimizer backends
-    """
 
     def __init__(
         self,
@@ -24,16 +19,10 @@ class GradientDescentOptimizer(Optimizer):
         x0: ndarray,
         n_restarts: int = 0,
         solver: str = 'l-bfgs-b',
-        backend='scipy'
     ):
-        # configuration
-        self.backend = backend
-        # search space
         self.bounds = bounds
-        # initialization
         self.X0 = x0
         self.n_restarts = n_restarts
-        # optimization algorithm
         self.solver = solver
 
     def __repr__(self):
@@ -41,17 +30,6 @@ class GradientDescentOptimizer(Optimizer):
 
     def __str__(self):
         return str({'bounds': self.bounds, 'x0': self.X0})
-
-    @property
-    def backend(self):
-        return self._backend
-
-    @backend.setter
-    def backend(self, backend: str):
-        if backend == 'scipy':
-            self._backend = backend
-        else:
-            raise ValueError(f'backend must be one of {OPT_BACKENDS.keys()}')
 
     @property
     def bounds(self):
@@ -127,9 +105,9 @@ class GradientDescentOptimizer(Optimizer):
             raise NotImplementedError
 
     def _min(self, fun: Callable, jac: Callable | bool, x0: ndarray):
-        return OPT_BACKENDS[self.backend](
+        return sp.optimize.minimize(
             fun=fun, jac=jac, x0=x0,
-            bounds=self.bounds.get(self.backend),
+            bounds=sp.optimize.Bounds(self.bounds.lowers, self.bounds.uppers),
             method=self.solver,
         )
 

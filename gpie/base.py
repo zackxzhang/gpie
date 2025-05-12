@@ -2,11 +2,8 @@
 # infrastructure
 
 import numpy as np                                                # type: ignore
-import scipy as sp                                                # type: ignore
-import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
-from functools import wraps
 from numpy import ndarray
 from .util import (
     check_X_update, check_X_y, check_X_y_update,
@@ -14,110 +11,17 @@ from .util import (
 )
 
 
-__all__ = ['Thetas', 'Bounds']
-
-
-OPT_BACKENDS = {'scipy': sp.optimize.minimize}              # optimizer backends
-SPL_BACKENDS = {'numpy': np.random}                           # sampler backends
-
-
-def verify_density_operands(density_operator):
-    """ decorator for overloading density operators """
-    @wraps(density_operator)
-    def wrapped_density_operator(self, operand):
-        if isinstance(operand, Density):
-            if self.n_variates == operand.n_variates:
-                return density_operator(self, operand)
-            else:
-                return ValueError('densities must agree on n_variates')
-        else:
-            raise ValueError('a density operator only accepts two densities.')
-    return wrapped_density_operator
-
-
-class Density(ABC):
-    """ unnormalized probability density """
-
-    @abstractmethod
-    def __init__(self):
-        """ initialize density object """
-
-    @abstractmethod
-    def __call__(self, x: ndarray):
-        """ evaluate density at x """
-
-    @abstractmethod
-    def symmetric(self) -> bool:
-        """ symmetric or asymmetric """
-
-    @property
-    @abstractmethod
-    def n_variates(self) -> int:
-        """ number of variates i.e. len(x) """
-
-    def _log_ratio(self, x_star, x):
-        """ q(x|x_star) / q(x_star|x) """
-        if self.symmetric():
-            return 0.
-        else:
-            raise NotImplementedError
-
-    @verify_density_operands
-    def __mul__(self, other):
-        if isinstance(self, Distribution) and isinstance(other, Distribution):
-            return ProductDistribution(self, other)
-        else:
-            return ProductDensity(self, other)
-
-    @verify_density_operands
-    def __rmul__(self, other):
-        if isinstance(other, Distribution) and isinstance(self, Distribution):
-            return ProductDistribution(other, self)
-        else:
-            return ProductDensity(other, self)
-
-
-class ProductDensity(Density):
-    """ product density """
-
-    def __init__(self, d1: Density, d2: Density):
-        self._d1 = d1
-        self._d2 = d2
-
-    def __call__(self, x: ndarray):
-        return self.d1(x) *  self.d2(x)
-
-    @property
-    def d1(self):
-        return self._d1
-
-    @property
-    def d2(self):
-        return self._d2
-
-    def symmetric(self) -> bool:
-        """ sufficient but not necessary condition for symmetry """
-        return self.d1.symmetric() and self.d2.symmetric()
-
-    @property
-    def n_variates(self):
-        return self.d1.n_variates
-
-
-class Distribution(Density):
-    """ normalized probability density """
-
-
-class ProductDistribution(Distribution, ProductDensity):
-    """ product distribution """
+__all__ = ['Bounds', 'Thetas']
 
 
 class Bounds:
+
     """
-    Thetas' component
-    empty bounds indicate no learnable parameters
-    bound values must be finite
+    parameter bounds
+        empty bounds indicate no learnable parameters
+        bound values must be finite
     """
+
     def __init__(
         self,
         lowers: ndarray = np.array([]),
@@ -157,12 +61,10 @@ class Bounds:
 
     @property
     def lowers(self) -> ndarray:
-        """ lower bound """
         return self._lowers
 
     @property
     def uppers(self) -> ndarray:
-        """ upper bound """
         return self._uppers
 
     def contains(self, values: ndarray) -> bool:
@@ -174,29 +76,23 @@ class Bounds:
             np.all(self.uppers + 1e-8 >= values)
         )
 
-    def get(self, backend: str = 'scipy'):
-        if backend == 'scipy':
-            return sp.optimize.Bounds(self.lowers, self.uppers)
-        else:
-            raise ValueError(f'backend must be one of {OPT_BACKENDS}')
-
     @classmethod
     def from_seq(cls, bounds: Sequence[B], transform: Callable = lambda x: x):
         return Bounds(*map_array(transform, concat_bounds(*bounds)))
 
 
 class Thetas:
+
     """
-    parameterization of models
-    empty thetas indicate no learnable parameters
-    infinite theta values indicate uninitialized status
+    parameter container
+        empty thetas indicate no learnable parameters
+        infinite theta values indicate uninitialized status
     """
 
     def __init__(
         self,
         values: ndarray = np.array([]),
         bounds: Bounds = Bounds(),
-        densities: Sequence[Density] | None = None,
     ):
         if not isinstance(bounds, Bounds):
             raise TypeError('bounds must be Bounds object.')
@@ -243,12 +139,10 @@ class Thetas:
 
     @property
     def values(self) -> ndarray:
-        """ values """
         return self._values
 
     @property
     def bounds(self) -> Bounds:
-        """ bounds """
         return self._bounds
 
     def set(self, values: ndarray):
@@ -268,16 +162,17 @@ class Thetas:
         """
         parameters are assigned with values/distribution or not
         special case: zero-size theta returns True
-        TODO: returns True if thetas has None as values but has prior dst
         """
+        # TODO: returns True if thetas has None as values but has prior dst
         return np.all(np.isfinite(self.values))
 
 
 class Hypers:
+
     """
     a view of learnable and fixed parameters
-    TODO: potentially no longer useful
     """
+    # TODO: potentially no longer useful
 
     def __init__(self, names: ndarray, values: ndarray):
         if isinstance(names, (tuple, list)):
@@ -409,7 +304,6 @@ class BayesianSupervisedModel(SupervisedModel):
         if n_samples = 0, returns a distribution object
         """
         # TODO: check if thetas has prior distributions or just a point value
-        # implement UninformedPrior class that always returns 1 as density
         if self.fitted():
             raise AttributeError(
                 'model already fitted. please refer to model '
@@ -472,19 +366,19 @@ class Optimizer(ABC):
 
     @abstractmethod
     def __init__(self):
-        """ initialize optimizer object """
+        pass
 
     @abstractmethod
     def minimize(self, *args, **kwargs):
-        """ main routine """
+        pass
 
 
 class Sampler(ABC):
 
     @abstractmethod
     def __init__(self):
-        """ initialize sampler object """
+        pass
 
     @abstractmethod
     def sample(self):
-        """ main routine """
+        pass

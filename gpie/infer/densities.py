@@ -4,20 +4,113 @@
 import numpy as np                                                # type: ignore
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from functools import wraps
 from numpy import ndarray, newaxis
 from scipy.stats import multivariate_normal, uniform              # type: ignore
-from ..base import Density, Distribution
+
+
+def verify_density_operands(density_operator):
+    """ decorator for overloading density operators """
+    @wraps(density_operator)
+    def wrapped_density_operator(self, operand):
+        if isinstance(operand, Density):
+            if self.n_variates == operand.n_variates:
+                return density_operator(self, operand)
+            else:
+                return ValueError('densities must agree on n_variates')
+        else:
+            raise ValueError('a density operator only accepts two densities.')
+    return wrapped_density_operator
+
+
+class Density(ABC):
+
+    """ unnormalized probability density """
+
+    @abstractmethod
+    def __init__(self):
+        """ initialize density object """
+
+    @abstractmethod
+    def __call__(self, x: ndarray):
+        """ evaluate density at x """
+
+    @abstractmethod
+    def symmetric(self) -> bool:
+        """ symmetric or asymmetric """
+
+    @property
+    @abstractmethod
+    def n_variates(self) -> int:
+        """ number of variates i.e. len(x) """
+
+    def _log_ratio(self, x_star, x):
+        """ q(x|x_star) / q(x_star|x) """
+        if self.symmetric():
+            return 0.
+        else:
+            raise NotImplementedError
+
+    @verify_density_operands
+    def __mul__(self, other):
+        if isinstance(self, Distribution) and isinstance(other, Distribution):
+            return ProductDistribution(self, other)
+        else:
+            return ProductDensity(self, other)
+
+    @verify_density_operands
+    def __rmul__(self, other):
+        if isinstance(other, Distribution) and isinstance(self, Distribution):
+            return ProductDistribution(other, self)
+        else:
+            return ProductDensity(other, self)
+
+
+class ProductDensity(Density):
+
+    """ product density """
+
+    def __init__(self, d1: Density, d2: Density):
+        self._d1 = d1
+        self._d2 = d2
+
+    def __call__(self, x: ndarray):
+        return self.d1(x) *  self.d2(x)
+
+    @property
+    def d1(self):
+        return self._d1
+
+    @property
+    def d2(self):
+        return self._d2
+
+    def symmetric(self) -> bool:
+        """ sufficient but not necessary condition for symmetry """
+        return self.d1.symmetric() and self.d2.symmetric()
+
+    @property
+    def n_variates(self):
+        return self.d1.n_variates
+
+
+class Distribution(Density):
+
+    """ normalized probability density """
+
+
+class ProductDistribution(Distribution, ProductDensity):
+
+    """ product distribution """
 
 
 class SymmetricMixin:
-    """ symmetric density """
 
     def symmetric(self) -> bool:
         return True
 
 
 class AsymmetricMixin:
-    """ asymmetric density """
 
     def symmetric(self) -> bool:
         return False
@@ -45,9 +138,10 @@ class LogDensity(AsymmetricMixin, Density):
 
 
 class Dirac(SymmetricMixin, Distribution):
+
     """
-    Dirac distribution / delta function / point mass
-    spike prior, tantamount to fixing the parameter
+    dirac distribution
+    spike prior, i.e., fixated, unchangeable belief
     """
 
     def __init__(self, mu: ndarray = np.zeros(1)):
@@ -74,9 +168,10 @@ class Dirac(SymmetricMixin, Distribution):
 
 
 class Flat(SymmetricMixin, Density):
+
     """
-    improper uniform
-    slab prior, tantamount to no prior belief whatsoever
+    improper uniform density
+    slab prior, i.e., no belief whatsoever
     """
 
     def __init__(self):
@@ -103,7 +198,8 @@ class Flat(SymmetricMixin, Density):
 
 
 class Gaussian(SymmetricMixin, Distribution):
-    """ multivariate Gaussian (normal) density """
+
+    """ Gaussian distribution """
 
     def __init__(self, mu: ndarray = np.zeros(1),
                  cov: ndarray = np.eye(1), **kwargs):
@@ -147,12 +243,13 @@ class Gaussian(SymmetricMixin, Distribution):
 
 
 class Student(SymmetricMixin, Distribution):
-    """ multivariate Student (t) density """
-    pass
+
+    """ Student distribution """
 
 
 class Uniform(SymmetricMixin, Distribution):
-    """ independent(!) multivariate uniform density """
+
+    """ independent multivariate uniform distribution """
 
     def __init__(self, a: ndarray = np.zeros(1), b: ndarray = np.ones(1)):
         self.parametrise(a=a, b=b)

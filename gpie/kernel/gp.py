@@ -10,7 +10,7 @@ from numpy import ndarray
 from scipy.linalg import cho_solve, cholesky                      # type: ignore
 from scipy.stats import norm, t                                   # type: ignore
 from scipy.special import gamma                                   # type: ignore
-from ..base import BayesianSupervisedModel, Thetas, Density
+from ..base import BayesianSupervisedModel
 from ..infer import (
     Dirac, Gaussian, Student, LogDensity,
     GradientDescentOptimizer, MarkovChainMonteCarloSampler

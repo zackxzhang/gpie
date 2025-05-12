@@ -10,7 +10,6 @@ from .densities import Density
 
 
 class MarkovChainSampler(Sampler):
-    """ Markov chain sampler, including MCMC and SA """
 
     def __init__(
         self,
@@ -124,7 +123,7 @@ class MarkovChainSampler(Sampler):
 
 
 class MarkovChainMonteCarloSampler(MarkovChainSampler):
-    """ Markov chain Monte Carlo, a.k.a. Metropolis Hastings """
+
     def __init__(
         self,
         log_p: Density,
@@ -153,7 +152,6 @@ class MarkovChainMonteCarloSampler(MarkovChainSampler):
 
 
 class SimulatedAnnealingSampler(MarkovChainSampler):
-    """ simulated annealing """
 
     def __init__(
         self,
@@ -163,7 +161,7 @@ class SimulatedAnnealingSampler(MarkovChainSampler):
         n_samples: int = 10000,
         n_burns: int = 2000,
         n_restarts: int = 0,
-        cooling: str | ndarray = 'linear'
+        cooling: str | ndarray = 'linear',
     ):
         super().__init__(log_p, q, x0, n_samples, n_burns, n_restarts)
         if cooling == 'linear':
@@ -188,21 +186,15 @@ class SimulatedAnnealingSampler(MarkovChainSampler):
 
 
 class ThermodynamicSASampler(SimulatedAnnealingSampler):
-    """ thermodynamic simulated annealing with adaptive cooling schedule """
 
-    def __init__(self):
-        super().__init__()
+    """ thermodynamic simulated annealing with adaptive cooling schedule """
 
 
 class HamiltonianMCSampler(MarkovChainMonteCarloSampler):
-    """ Hamiltonian Monte Carlo with adaptive proposals based on gradient """
 
-    def __init__(self):
-        super().__init__()
+    """ Hamiltonian Monte Carlo with adaptive proposals based on gradient """
 
 
 class NoUTurnHMCSampler(HamiltonianMCSampler):
-    """ Hamiltonian Monte Carlo with auto-calibration heuristics """
 
-    def __init__(self):
-        super().__init__()
+    """ Hamiltonian Monte Carlo with auto-calibration heuristics """

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# data utilities
+# helper functions
 
 import numpy as np                                                # type: ignore
 from collections.abc import Callable, Sequence
-from functools import wraps, partial
+from functools import partial, wraps
 from numpy import ndarray
 from typing import TypeAlias
 
